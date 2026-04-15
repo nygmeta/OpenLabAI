@@ -1,6 +1,6 @@
 # 🧬 Lab-Assistant
 
-**Natural language control for liquid handling robots — no coding required.**
+**Natural language control for liquid handling robots: no coding required.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
