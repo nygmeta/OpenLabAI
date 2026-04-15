@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BiomekAgent — FXP Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #ffffff;
+  --bg1:      #fafafa;
+  --bg2:      #f4f4f2;
+  --bg3:      #eeede9;
+  --bg4:      #e5e4df;
+  --line:     rgba(0,0,0,0.06);
+  --line2:    rgba(0,0,0,0.10);
+  --line3:    rgba(0,0,0,0.18);
+  --txt:      #1a1a18;
+  --txt2:     #6b6b67;
+  --txt3:     #a8a8a4;
+  --accent:   #1a7f5a;
+  --accent-l: #e8f5f0;
+  --accent-m: #2ea87a;
+  --blue:     #1a5a8f;
+  --blue-l:   #e8f0f8;
+  --amber:    #8f5a1a;
+  --amber-l:  #f8f0e8;
+  --red:      #8f1a1a;
+  --red-l:    #f8e8e8;
+  --purple:   #5a1a8f;
+  --purple-l: #f0e8f8;
+  --mono: 'Geist Mono', monospace;
+  --sans: 'Geist', sans-serif;
+  --r: 8px;
+  --r2: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow2: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--bg1);color:var(--txt);font-family:var(--sans);font-size:13px;overflow:hidden}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-rows:52px 1fr;grid-template-columns:1fr 1px 1fr;height:100vh;min-width:900px}
+.divider-v{background:var(--line2);grid-row:1/-1}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr;grid-template-rows:52px 1fr 1fr;min-width:unset;overflow-y:auto;height:auto;min-height:100vh}
+  .divider-v{display:none}
+  html,body{overflow:auto}
+  .left-panel,.right-panel{height:60vh}
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:0;
+  background:var(--bg);border-bottom:1px solid var(--line2);
+  padding:0 20px;
+  box-shadow:var(--shadow);
+  z-index:10;position:relative;
+}
+.logo{
+  display:flex;align-items:center;gap:8px;
+  padding-right:20px;border-right:1px solid var(--line2);margin-right:20px;
+}
+.logo-helix{width:22px;height:22px;flex-shrink:0}
+.logo-text{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--txt);letter-spacing:-0.02em}
+.logo-text em{color:var(--accent);font-style:normal}
+
+.status-pill{display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:20px;background:var(--bg2);border:1px solid var(--line2);box-shadow:var(--shadow)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);flex-shrink:0;transition:background .3s}
+.dot.ready{background:var(--accent-m)}
+.dot.thinking{background:#d4a017;animation:blink .7s infinite}
+.dot.running{background:var(--blue);animation:blink .45s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.stxt{font-family:var(--mono);font-size:11px;color:var(--txt2)}
+
+.chips{display:flex;gap:6px;margin-left:14px}
+.chip{font-family:var(--mono);font-size:10px;padding:4px 9px;border-radius:6px;border:1px solid var(--line2);color:var(--txt3);background:var(--bg2);letter-spacing:.02em;transition:all .2s}
+.chip.on{color:var(--accent);border-color:rgba(42,168,122,.35);background:var(--accent-l)}
+.chip.warn{color:var(--amber);border-color:rgba(143,90,26,.25);background:var(--amber-l)}
+
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.api-wrap{display:flex;align-items:center;gap:7px}
+.api-wrap label{font-family:var(--mono);font-size:10px;color:var(--txt3);letter-spacing:.06em}
+.api-wrap input{font-family:var(--mono);font-size:10px;padding:5px 9px;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;color:var(--txt2);width:185px;outline:none;transition:all .2s}
+.api-wrap input:focus{border-color:rgba(42,168,122,.5);background:var(--bg);box-shadow:0 0 0 3px rgba(42,168,122,.08)}
+#clock{font-family:var(--mono);font-size:11px;color:var(--txt3)}
+
+/* ── PANELS ── */
+.left-panel,.right-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+
+.panel-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--bg)}
+.ph-lbl{font-family:var(--mono);font-size:10px;color:var(--txt3);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.ph-right{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--txt3)}
+
+/* ── QUICK COMMANDS ── */
+.quick-bar{padding:10px 18px;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;border-bottom:1px solid var(--line);background:var(--bg1)}
+.qbtn{
+  font-family:var(--mono);font-size:10px;
+  padding:5px 10px 5px 8px;border-radius:6px;
+  border:1px solid var(--line2);background:var(--bg);
+  color:var(--txt2);cursor:pointer;
+  display:inline-flex;align-items:center;gap:5px;
+  transition:all .15s;box-shadow:var(--shadow);
+  white-space:nowrap;
+}
+.qbtn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l);box-shadow:var(--shadow2)}
+.qbtn-icon{font-size:11px;line-height:1}
+
+/* ── CHAT ── */
+.chat-feed{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;background:var(--bg1);scrollbar-width:thin;scrollbar-color:var(--bg3) transparent}
+.chat-feed::-webkit-scrollbar{width:4px}
+.chat-feed::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+
+.msg-row{display:flex;flex-direction:column;gap:3px;animation:fi .18s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.msg-row.user{align-items:flex-end}
+.msg-row.agent{align-items:flex-start}
+.msg-lbl{font-family:var(--mono);font-size:9px;color:var(--txt3);padding:0 3px;letter-spacing:.05em}
+.bubble{padding:10px 14px;border-radius:var(--r2);font-size:13px;line-height:1.6;max-width:88%;word-break:break-word;box-shadow:var(--shadow)}
+.msg-row.user .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px;font-weight:400}
+.msg-row.agent .bubble{background:var(--bg);color:var(--txt);border-bottom-left-radius:3px;border:1px solid var(--line2)}
+.tool-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:4px;background:var(--amber-l);border:1px solid rgba(143,90,26,.2);color:var(--amber);display:inline-flex;align-items:center;gap:5px;margin-top:3px}
+
+.thinking-row{display:flex;flex-direction:column;gap:3px}
+.thinking-bubble{background:var(--bg);border:1px solid var(--line2);border-radius:var(--r2);border-bottom-left-radius:3px;padding:11px 14px;display:flex;gap:5px;align-items:center;box-shadow:var(--shadow)}
+.td{width:5px;height:5px;border-radius:50%;background:var(--txt3);animation:td 1.1s infinite}
+.td:nth-child(2){animation-delay:.22s}
+.td:nth-child(3){animation-delay:.44s}
+@keyframes td{0%,100%{opacity:.25;transform:scale(.75)}50%{opacity:1;transform:scale(1)}}
+
+/* ── INPUT ── */
+.chat-bottom{flex-shrink:0;padding:14px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-in{
+  flex:1;background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);
+  color:var(--txt);font-family:var(--sans);font-size:13px;
+  padding:10px 13px;resize:none;height:42px;outline:none;
+  transition:all .2s;line-height:1.4;
+}
+.chat-in:focus{border-color:rgba(42,168,122,.5);background:var(--bg);box-shadow:0 0 0 3px rgba(42,168,122,.08)}
+
+/* DNA SEND BUTTON */
+.send-btn{
+  width:42px;height:42px;flex-shrink:0;
+  background:var(--accent);border:none;border-radius:var(--r);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .18s;box-shadow:var(--shadow2);position:relative;overflow:hidden;
+}
+.send-btn:hover{background:var(--accent-m);transform:scale(1.05);box-shadow:0 3px 12px rgba(42,168,122,.35)}
+.send-btn:active{transform:scale(0.97)}
+.send-btn:disabled{opacity:.3;cursor:default;transform:none}
+.send-btn svg{width:18px;height:18px}
+.char-hint{font-family:var(--mono);font-size:9px;color:var(--txt3);text-align:right}
+
+/* ── DECK ── */
+.deck-section{padding:13px 18px;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--bg)}
+.sec-lbl{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;font-weight:500}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--line2)}
+.deck-map{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.dpos{
+  height:28px;border-radius:6px;border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;cursor:pointer;
+  transition:all .15s;color:var(--txt3);letter-spacing:.02em;
+  background:var(--bg2);font-weight:500;
+}
+.dpos:hover{transform:scale(1.1);z-index:2;position:relative;box-shadow:var(--shadow2)}
+.dpos.plate{background:var(--accent-l);border-color:rgba(42,168,122,.3);color:var(--accent)}
+.dpos.tips{background:var(--blue-l);border-color:rgba(26,90,143,.25);color:var(--blue)}
+.dpos.trough{background:var(--amber-l);border-color:rgba(143,90,26,.25);color:var(--amber)}
+.dpos.empty{background:var(--bg2);border-style:dashed;color:var(--txt3)}
+.dpos.spacer{border:none;background:transparent;cursor:default}
+
+/* ── GANTT ── */
+.gantt-section{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:12px 18px;gap:8px;background:var(--bg1)}
+.gantt-empty{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  color:var(--txt3);font-family:var(--mono);font-size:11px;
+  text-align:center;line-height:2.2;
+  border:1.5px dashed var(--line2);border-radius:var(--r2);
+  background:var(--bg);
+}
+.gantt-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg3) transparent}
+.gantt-scroll::-webkit-scrollbar{width:3px}
+.gantt-scroll::-webkit-scrollbar-thumb{background:var(--bg3)}
+.gantt-axis{display:flex;padding-left:110px;margin-bottom:5px}
+.gtick{flex:1;font-family:var(--mono);font-size:9px;color:var(--txt3);text-align:center}
+.gantt-row{display:flex;align-items:center;margin-bottom:5px}
+.g-lbl{width:110px;font-family:var(--mono);font-size:9px;color:var(--txt2);text-align:right;padding-right:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.g-track{flex:1;height:20px;background:var(--bg2);border-radius:4px;position:relative;border:1px solid var(--line)}
+.g-bar{position:absolute;height:100%;border-radius:3px;display:flex;align-items:center;padding:0 6px;font-family:var(--mono);font-size:8px;white-space:nowrap;overflow:hidden;cursor:default;transition:filter .15s;font-weight:500}
+.g-bar:hover{filter:brightness(.92)}
+.g-bar.aspirate{background:var(--accent-l);border:1px solid rgba(42,168,122,.4);color:var(--accent)}
+.g-bar.dispense{background:var(--blue-l);border:1px solid rgba(26,90,143,.3);color:var(--blue)}
+.g-bar.transfer{background:#eef8f4;border:1px solid rgba(42,168,122,.25);color:var(--accent)}
+.g-bar.mix{background:var(--amber-l);border:1px solid rgba(143,90,26,.3);color:var(--amber)}
+.g-bar.wash{background:var(--purple-l);border:1px solid rgba(90,26,143,.25);color:var(--purple)}
+.g-bar.active{animation:gb 1s infinite}
+@keyframes gb{0%,100%{filter:brightness(1)}50%{filter:brightness(.82)}}
+.g-bar.done{opacity:.38}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;color:var(--txt3)}
+.leg-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.leg-sq.aspirate{background:var(--accent)}
+.leg-sq.dispense{background:var(--blue)}
+.leg-sq.mix{background:var(--amber)}
+.leg-sq.wash{background:var(--purple)}
+.leg-sq.transfer{background:rgba(42,168,122,.5)}
+
+/* ── RUN BAR ── */
+.run-bar{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:9px;background:var(--bg)}
+.run-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 16px;background:var(--accent);border:none;border-radius:var(--r);
+  font-family:var(--mono);font-size:11px;font-weight:600;color:#fff;
+  cursor:pointer;letter-spacing:.03em;transition:all .15s;flex-shrink:0;
+  box-shadow:var(--shadow2);
+}
+.run-btn:hover:not(:disabled){background:var(--accent-m);box-shadow:0 3px 10px rgba(42,168,122,.3)}
+.run-btn:disabled{opacity:.25;cursor:default;box-shadow:none}
+.run-btn.stop{background:var(--red);box-shadow:0 2px 8px rgba(143,26,26,.2)}
+.run-btn.stop:hover{background:#c01a1a}
+.run-btn svg{width:13px;height:13px;flex-shrink:0}
+.sec-btn{padding:7px 12px;background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);font-family:var(--mono);font-size:11px;color:var(--txt2);cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.sec-btn:hover{background:var(--bg3);border-color:var(--line3)}
+.prog-wrap{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;opacity:0;transition:opacity .3s}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.run-info{font-family:var(--mono);font-size:10px;color:var(--txt3);white-space:nowrap;min-width:130px;text-align:right}
+
+/* ── SCIENCE DECORATION ── */
+.nucleotide-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:var(--mono);font-size:9px;font-weight:600;
+  padding:2px 6px;border-radius:4px;letter-spacing:.04em;
+  flex-shrink:0;
+}
+.nb-A{background:#fde8e8;color:#991b1b;border:1px solid rgba(153,27,27,.2)}
+.nb-T{background:#fef3e2;color:#92400e;border:1px solid rgba(146,64,14,.2)}
+.nb-G{background:#e8f5f0;color:#065f46;border:1px solid rgba(6,95,70,.2)}
+.nb-C{background:#e8f0fe;color:#1e40af;border:1px solid rgba(30,64,175,.2)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <!-- Mini DNA helix SVG -->
+    <svg class="logo-helix" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 3 C6 3 11 6 16 3" stroke="#1a7f5a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M6 19 C6 19 11 16 16 19" stroke="#1a7f5a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M6 3 C4 7 4 15 6 19" stroke="#a8a8a4" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <path d="M16 3 C18 7 18 15 16 19" stroke="#a8a8a4" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <line x1="7.5" y1="8" x2="14.5" y2="7" stroke="#1a7f5a" stroke-width="1" stroke-linecap="round" opacity=".7"/>
+      <line x1="7" y1="11" x2="15" y2="11" stroke="#1a7f5a" stroke-width="1" stroke-linecap="round" opacity=".9"/>
+      <line x1="7.5" y1="14" x2="14.5" y2="15" stroke="#1a7f5a" stroke-width="1" stroke-linecap="round" opacity=".7"/>
+    </svg>
+    <div class="logo-text">Biomek<em>Agent</em></div>
+  </div>
+  <div class="status-pill">
+    <div class="dot ready" id="sdot"></div>
+    <span class="stxt" id="stxt">FXP ready</span>
+  </div>
+  <div class="chips">
+    <div class="chip on" id="chip-tips">Tips: full</div>
+    <div class="chip warn" id="chip-method">No method</div>
+    <div class="chip" id="chip-head">Span-8 · 300 µL</div>
+  </div>
+  <div class="topbar-right">
+    <div class="api-wrap">
+      <label>API KEY</label>
+      <input type="password" id="api-key" placeholder="sk-ant-api03-…"/>
+    </div>
+    <div id="clock"></div>
+  </div>
+</div>
+
+<!-- LEFT: CHAT -->
+<div class="left-panel">
+  <div class="panel-head">
+    <div class="ph-lbl">Agent chat</div>
+    <div class="ph-right" id="msg-count">0 messages</div>
+  </div>
+  <div class="quick-bar">
+    <button class="qbtn" onclick="qcmd('Read my deck and tell me what labware is loaded at each position')">
+      <span class="qbtn-icon">🔬</span>read deck
+    </button>
+    <button class="qbtn" onclick="qcmd('What are the current method variables — aspirate height, mix speed, volumes?')">
+      <span class="qbtn-icon">⚗️</span>variables
+    </button>
+    <button class="qbtn" onclick="qcmd('Create a 50 µL column transfer protocol from P1 to P4, new tips each row')">
+      <span class="qbtn-icon">🧫</span>50 µL transfer
+    </button>
+    <button class="qbtn" onclick="qcmd('Plan an NGS library cleanup: 40 µL AMPure bead binding, 3x 80 µL EtOH wash, 20 µL elution')">
+      <span class="qbtn-icon">🧬</span>NGS cleanup
+    </button>
+    <button class="qbtn" onclick="qcmd('DNA normalization: transfer 20 µL from P1 to P4, mix 5 cycles after dispense')">
+      <span class="qbtn-icon">🔭</span>normalize
+    </button>
+  </div>
+  <div class="chat-feed" id="chat-feed"></div>
+  <div class="chat-bottom">
+    <div class="input-row">
+      <textarea class="chat-in" id="chat-in"
+        placeholder="Describe your protocol or ask about the deck…"
+        onkeydown="onKey(event)" oninput="upChar()"></textarea>
+
+      <!-- DNA HELIX SEND BUTTON -->
+      <button class="send-btn" id="send-btn" onclick="send()" title="Send (Enter)">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Double helix strands -->
+          <path d="M5 4 C5 4 12 8 19 4" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <path d="M5 20 C5 20 12 16 19 20" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <path d="M5 4 C3 8 3 16 5 20" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M19 4 C21 8 21 16 19 20" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <!-- Base pairs -->
+          <line x1="6.5" y1="9" x2="17.5" y2="8.2" stroke="white" stroke-width="1.1" stroke-linecap="round" opacity=".85"/>
+          <line x1="6" y1="12" x2="18" y2="12" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="6.5" y1="15" x2="17.5" y2="15.8" stroke="white" stroke-width="1.1" stroke-linecap="round" opacity=".85"/>
+          <!-- Arrow up (send) -->
+          <path d="M12 2 L12 6 M10.5 3.5 L12 2 L13.5 3.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".0"/>
+        </svg>
+      </button>
+    </div>
+    <div class="char-hint" id="char-hint"></div>
+  </div>
+</div>
+
+<div class="divider-v"></div>
+
+<!-- RIGHT: PLANNER -->
+<div class="right-panel">
+  <div class="panel-head">
+    <div class="ph-lbl">Run planner</div>
+    <div class="ph-right" id="est-lbl">— min estimated</div>
+  </div>
+
+  <div class="deck-section">
+    <div class="sec-lbl">Deck layout</div>
+    <div class="deck-map" id="deck-map"></div>
+  </div>
+
+  <div class="gantt-section">
+    <div class="sec-lbl">
+      Timeline
+      <div class="legend">
+        <div class="leg"><div class="leg-sq aspirate"></div>aspirate</div>
+        <div class="leg"><div class="leg-sq dispense"></div>dispense</div>
+        <div class="leg"><div class="leg-sq mix"></div>mix</div>
+        <div class="leg"><div class="leg-sq wash"></div>wash</div>
+        <div class="leg"><div class="leg-sq transfer"></div>transfer</div>
+      </div>
+    </div>
+    <div id="gantt-empty" class="gantt-empty">
+      🧬 Ask the agent to create a protocol<br>— the run timeline will appear here —
+    </div>
+    <div id="gantt-scroll" class="gantt-scroll" style="display:none"></div>
+  </div>
+
+  <div class="run-bar">
+    <button class="run-btn" id="run-btn" onclick="toggleRun()" disabled>
+      <svg viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" fill="white"/></svg>
+      Run
+    </button>
+    <button class="sec-btn" onclick="clearPlan()">Clear</button>
+    <div class="prog-wrap" id="prog-wrap">
+      <div class="prog-fill" id="prog-fill"></div>
+    </div>
+    <div class="run-info" id="run-info">No protocol loaded</div>
+  </div>
+</div>
+
+</div>
+<script>
+const DECK=[
+  {id:'TL1',t:'trough'},{id:'P7',t:'tips'},{id:'P11',t:'plate'},{id:'P15',t:'empty'},{id:'TR1',t:'trough'},{id:'',t:'spacer'},
+  {id:'P1',t:'plate'},{id:'P4',t:'plate'},{id:'P8',t:'tips'},{id:'P12',t:'plate'},{id:'P16',t:'empty'},{id:'P19',t:'empty'},
+  {id:'P2',t:'empty'},{id:'P5',t:'empty'},{id:'P9',t:'empty'},{id:'P13',t:'empty'},{id:'P17',t:'empty'},{id:'P20',t:'empty'},
+  {id:'P3',t:'empty'},{id:'P6',t:'empty'},{id:'P10',t:'empty'},{id:'P14',t:'empty'},{id:'P18',t:'empty'},{id:'P21',t:'empty'},
+];
+
+const SYS=`You are a Beckman Coulter Biomek FXP liquid handling robot assistant. Help scientists plan and run protocols.
+When creating a protocol respond with a brief plain-English explanation then exactly one JSON block:
+\`\`\`json
+{"protocol_name":"name","estimated_minutes":20,"steps":[{"id":1,"label":"Step label","type":"aspirate","source":"TL1","dest":"P1","volume_ul":40,"duration_min":2}]}
+\`\`\`
+Step types: aspirate, dispense, transfer, mix, wash.
+Current deck: plates at P1,P4,P11,P12; tips at P7,P8; troughs at TL1,TR1; rest empty.
+Variables: AspirateHeight 1.0mm, DispenseHeight 1.0mm, MixSpeed 12, MixTimes 3, MixVolume 6µL, TransferMixSpeed 12, TransferMixTimes 4, TransferMixVolume 8µL.
+Be concise and precise. Use realistic lab volumes and timing.`;
+
+let msgs=[],plan=null,running=false,runTimer=null,stepIdx=0,busy=false;
+
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+tick();setInterval(tick,1000);
+
+function buildDeck(){
+  const el=document.getElementById('deck-map');el.innerHTML='';
+  DECK.forEach(p=>{
+    const d=document.createElement('div');
+    if(!p.id){d.className='dpos spacer';el.appendChild(d);return;}
+    d.className='dpos '+p.t;d.textContent=p.id;d.title=p.id+' — '+p.t;
+    d.onclick=()=>qcmd('Tell me about deck position '+p.id+' and what labware is loaded there');
+    el.appendChild(d);
+  });
+}
+
+// Nucleotide badge helper used in chat messages
+function ntBadge(n){return`<span class="nucleotide-badge nb-${n}">${n}</span>`;}
+
+function addMsg(role,text,tool){
+  msgs.push({role,text,tool});renderFeed();
+  document.getElementById('msg-count').textContent=msgs.length+' messages';
+}
+
+function renderFeed(){
+  const f=document.getElementById('chat-feed');f.innerHTML='';
+  msgs.forEach((m,i)=>{
+    const row=document.createElement('div');
+    row.className='msg-row '+(m.role==='user'?'user':'agent');
+    const lbl=document.createElement('div');
+    lbl.className='msg-lbl';
+    lbl.textContent=m.role==='user'?'you':'biomekagent';
+    const b=document.createElement('div');
+    b.className='bubble';
+    b.textContent=m.text;
+    row.appendChild(lbl);row.appendChild(b);
+    if(m.tool){
+      const tb=document.createElement('div');tb.className='tool-badge';
+      tb.textContent='⚙ '+m.tool;row.appendChild(tb);
+    }
+    f.appendChild(row);
+  });
+  f.scrollTop=f.scrollHeight;
+}
+
+function showThinking(){
+  const f=document.getElementById('chat-feed');
+  const row=document.createElement('div');row.className='thinking-row';row.id='thinking';
+  const lbl=document.createElement('div');lbl.className='msg-lbl';lbl.textContent='biomekagent';
+  const b=document.createElement('div');b.className='thinking-bubble';
+  for(let i=0;i<3;i++){const d=document.createElement('div');d.className='td';b.appendChild(d);}
+  row.appendChild(lbl);row.appendChild(b);f.appendChild(row);f.scrollTop=f.scrollHeight;
+}
+function hideThinking(){const el=document.getElementById('thinking');if(el)el.remove();}
+
+function setStatus(s){
+  const dot=document.getElementById('sdot'),txt=document.getElementById('stxt');
+  dot.className='dot '+s;
+  txt.textContent=s==='ready'?'FXP ready':s==='thinking'?'Agent thinking…':'Protocol running';
+}
+
+function qcmd(t){document.getElementById('chat-in').value=t;send();}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function upChar(){const v=document.getElementById('chat-in').value;document.getElementById('char-hint').textContent=v.length?v.length+' chars':'';}
+
+async function send(){
+  const inp=document.getElementById('chat-in');
+  const txt=inp.value.trim();
+  if(!txt||busy)return;
+  inp.value='';upChar();busy=true;
+  document.getElementById('send-btn').disabled=true;
+  addMsg('user',txt);setStatus('thinking');showThinking();
+
+  const key=document.getElementById('api-key').value.trim();
+  const apiMsgs=msgs.slice(0,-1).map(m=>({role:m.role==='user'?'user':'assistant',content:m.text}));
+  apiMsgs.push({role:'user',content:txt});
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:apiMsgs})
+    });
+    const data=await res.json();
+    hideThinking();
+    const reply=data.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'No response.';
+    const hasPlan=reply.includes('```json');
+    const disp=reply.replace(/```json[\s\S]*?```/g,'[Protocol generated — timeline updated →]').trim();
+    addMsg('assistant',disp,hasPlan?'create_protocol()':null);
+    if(hasPlan)tryParse(reply);
+  }catch(e){
+    hideThinking();
+    addMsg('assistant','Cannot reach Claude API. Enter your API key in the top bar. Showing demo protocol.');
+    injectDemo(txt);
+  }
+  busy=false;document.getElementById('send-btn').disabled=false;setStatus('ready');
+}
+
+function tryParse(text){
+  const m=text.match(/```json\s*([\s\S]*?)```/);
+  if(!m)return;
+  try{const p=JSON.parse(m[1]);if(p.steps?.length)loadPlan(p);}catch(e){}
+}
+
+function loadPlan(p){
+  plan=p;
+  document.getElementById('chip-method').textContent=p.protocol_name||'Unnamed';
+  document.getElementById('chip-method').className='chip on';
+  document.getElementById('est-lbl').textContent='~'+(p.estimated_minutes||'?')+' min estimated';
+  document.getElementById('run-btn').disabled=false;
+  document.getElementById('run-info').textContent=p.steps.length+' steps · ~'+(p.estimated_minutes||'?')+' min';
+  renderGantt(p);
+}
+
+function renderGantt(p){
+  document.getElementById('gantt-empty').style.display='none';
+  const sc=document.getElementById('gantt-scroll');sc.style.display='block';
+  const total=p.steps.reduce((s,st)=>s+(st.duration_min||1),0);
+  const ticks=Math.min(8,Math.ceil(total));
+  let html='<div class="gantt-axis">';
+  for(let i=0;i<=ticks;i++)html+=`<div class="gtick">${Math.round(total/ticks*i)}m</div>`;
+  html+='</div>';
+  let elapsed=0;
+  p.steps.forEach(st=>{
+    const l=(elapsed/total*100).toFixed(2);
+    const w=Math.max(1,(st.duration_min||1)/total*100).toFixed(2);
+    elapsed+=(st.duration_min||1);
+    html+=`<div class="gantt-row">
+      <div class="g-lbl" title="${st.label}">${st.label}</div>
+      <div class="g-track">
+        <div class="g-bar ${st.type}" id="gb${st.id}" style="left:${l}%;width:${w}%">
+          ${parseFloat(w)>10?(st.source||''):''}
+        </div>
+      </div>
+    </div>`;
+  });
+  sc.innerHTML=html;
+}
+
+function toggleRun(){running?stopRun():startRun();}
+
+function startRun(){
+  if(!plan)return;
+  running=true;stepIdx=0;
+  const rb=document.getElementById('run-btn');
+  rb.innerHTML='<svg viewBox="0 0 12 12" fill="none"><rect x="2" y="1" width="3" height="10" fill="white" rx="1"/><rect x="7" y="1" width="3" height="10" fill="white" rx="1"/></svg> Stop';
+  rb.classList.add('stop');
+  document.getElementById('prog-wrap').style.opacity='1';
+  setStatus('running');
+  addMsg('assistant','Protocol started — '+plan.steps.length+' steps queued. Running…');
+  runNext();
+}
+
+function runNext(){
+  if(!running||stepIdx>=plan.steps.length){finishRun();return;}
+  const st=plan.steps[stepIdx];
+  document.querySelectorAll('.g-bar').forEach(b=>b.classList.remove('active'));
+  const bar=document.getElementById('gb'+st.id);
+  if(bar)bar.classList.add('active');
+  document.getElementById('prog-fill').style.width=Math.round(stepIdx/plan.steps.length*100)+'%';
+  document.getElementById('run-info').textContent='Step '+(stepIdx+1)+'/'+plan.steps.length+': '+st.label;
+  runTimer=setTimeout(()=>{
+    if(bar){bar.classList.remove('active');bar.classList.add('done');}
+    stepIdx++;runNext();
+  },Math.max(400,(st.duration_min||1)*600));
+}
+
+function finishRun(){
+  running=false;
+  const rb=document.getElementById('run-btn');
+  rb.innerHTML='<svg viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" fill="white"/></svg> Run';
+  rb.classList.remove('stop');
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('run-info').textContent='Complete ✓';
+  setStatus('ready');
+  if(stepIdx>0)addMsg('assistant','All '+plan.steps.length+' steps completed successfully! 🎉');
+}
+
+function stopRun(){
+  running=false;clearTimeout(runTimer);
+  const rb=document.getElementById('run-btn');
+  rb.innerHTML='<svg viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" fill="white"/></svg> Run';
+  rb.classList.remove('stop');
+  setStatus('ready');
+  document.getElementById('run-info').textContent='Stopped at step '+(stepIdx+1);
+  addMsg('assistant','Stopped at step '+(stepIdx+1)+'. Safe to resume or clear.');
+}
+
+function clearPlan(){
+  if(running)stopRun();
+  plan=null;stepIdx=0;
+  document.getElementById('gantt-empty').style.display='flex';
+  document.getElementById('gantt-scroll').style.display='none';
+  const rb=document.getElementById('run-btn');
+  rb.disabled=true;rb.classList.remove('stop');
+  rb.innerHTML='<svg viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" fill="white"/></svg> Run';
+  document.getElementById('prog-fill').style.width='0%';
+  document.getElementById('prog-wrap').style.opacity='0';
+  document.getElementById('run-info').textContent='No protocol loaded';
+  document.getElementById('est-lbl').textContent='— min estimated';
+  document.getElementById('chip-method').textContent='No method';
+  document.getElementById('chip-method').className='chip warn';
+}
+
+function injectDemo(txt){
+  const t=txt.toLowerCase();
+  if(t.includes('ngs')||t.includes('cleanup')||t.includes('ampure')){
+    loadPlan({protocol_name:'NGS_cleanup',estimated_minutes:28,steps:[
+      {id:1,label:'Aspirate AMPure beads',type:'aspirate',source:'TL1',dest:'P1',volume_ul:40,duration_min:2},
+      {id:2,label:'Dispense beads to samples',type:'dispense',source:'TL1',dest:'P1',volume_ul:40,duration_min:1.5},
+      {id:3,label:'Mix beads + DNA',type:'mix',source:'P1',dest:'P1',volume_ul:60,duration_min:2.5},
+      {id:4,label:'Incubate on magnet',type:'wash',source:'P1',dest:'',volume_ul:0,duration_min:5},
+      {id:5,label:'Remove supernatant',type:'aspirate',source:'P1',dest:'TL1',volume_ul:90,duration_min:2},
+      {id:6,label:'EtOH wash × 1',type:'transfer',source:'TR1',dest:'P1',volume_ul:80,duration_min:2},
+      {id:7,label:'EtOH wash × 2',type:'transfer',source:'TR1',dest:'P1',volume_ul:80,duration_min:2},
+      {id:8,label:'EtOH wash × 3',type:'transfer',source:'TR1',dest:'P1',volume_ul:80,duration_min:2},
+      {id:9,label:'Air dry beads',type:'wash',source:'P1',dest:'',volume_ul:0,duration_min:4},
+      {id:10,label:'Elute in water',type:'dispense',source:'TR1',dest:'P1',volume_ul:20,duration_min:1.5},
+      {id:11,label:'Mix to elute',type:'mix',source:'P1',dest:'',volume_ul:15,duration_min:1.5},
+    ]});
+    addMsg('assistant','NGS cleanup loaded: 11 steps — AMPure binding → 3× EtOH wash → air dry → elution. ~28 min total. Check the timeline →');
+  }else if(t.includes('normaliz')){
+    loadPlan({protocol_name:'DNA_normalization',estimated_minutes:12,steps:[
+      {id:1,label:'Get tips',type:'wash',source:'P7',dest:'',volume_ul:0,duration_min:0.5},
+      {id:2,label:'Aspirate from P1',type:'aspirate',source:'P1',dest:'',volume_ul:20,duration_min:2},
+      {id:3,label:'Dispense to P4',type:'dispense',source:'',dest:'P4',volume_ul:20,duration_min:2},
+      {id:4,label:'Mix 5 cycles',type:'mix',source:'P4',dest:'',volume_ul:15,duration_min:3},
+      {id:5,label:'Repeat all wells',type:'transfer',source:'P1',dest:'P4',volume_ul:20,duration_min:4},
+    ]});
+    addMsg('assistant','DNA normalization loaded: 20 µL transfer + 5-cycle mix. ~12 min. Timeline updated →');
+  }else{
+    loadPlan({protocol_name:'Transfer_50uL',estimated_minutes:8,steps:[
+      {id:1,label:'Get tips from P7',type:'wash',source:'P7',dest:'',volume_ul:0,duration_min:0.5},
+      {id:2,label:'Aspirate from P1',type:'aspirate',source:'P1',dest:'',volume_ul:50,duration_min:1.5},
+      {id:3,label:'Dispense to P4',type:'dispense',source:'',dest:'P4',volume_ul:50,duration_min:1.5},
+      {id:4,label:'Change tips',type:'wash',source:'P7',dest:'',volume_ul:0,duration_min:0.5},
+      {id:5,label:'Repeat all rows',type:'transfer',source:'P1',dest:'P4',volume_ul:50,duration_min:4},
+    ]});
+    addMsg('assistant','50 µL column transfer loaded. 5 steps, tip change per row. ~8 min. See timeline →');
+  }
+}
+
+buildDeck();
+addMsg('assistant','Biomek FXP ready 🧬 Enter your Claude API key above for full AI-powered protocol generation, or click any quick command to try demo mode. I can read your deck layout, generate liquid handling protocols, and simulate the run timeline.');
+</script>
+</body>
+</html>
