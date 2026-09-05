@@ -129,7 +129,7 @@ OpenLabAI/
 │   └── custom_labware.py         # Custom labware definitions for PyLabRobot
 ├── examples/
 │   ├── ngs_cleanup_example.md    # Step-by-step walkthrough
-│   └── slas_boston_case_study.md # SLAS Boston 2025 live demo case study
+│   └── slas_boston_case_study.md # SLAS Boston 2026 live demo case study
 ├── docs/
 │   ├── INSTRUMENT_GUIDE.md       # How to connect each instrument type
 │   └── SCIENTIST_GUIDE.md        # For scientists with no coding background
