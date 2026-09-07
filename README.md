@@ -13,9 +13,8 @@ and it never moves a robot without a person explicitly approving that run.
 
 ---
 
-## Project Status — 7 September 2026
+## Project Status
 
-This is an early-stage framework. What follows is the honest current state.
 
 **Runs end to end today**
 
@@ -32,8 +31,7 @@ This is an early-stage framework. What follows is the honest current state.
   in Biomek Software on a real instrument.
 - The Hamilton MCP server: generates PyLabRobot protocols for a STAR/STARlet and
   dry-runs them through PyLabRobot's chatterbox backend, which logs every command
-  instead of sending it to hardware. Verified in simulation only — no physical
-  Hamilton has been connected.
+  instead of sending it to hardware. Verified in simulation. 
 - The eval framework (`evals/`): deck constraint checking, acceptance criteria
   per protocol type, scoring, run logging with a protocol hash, and a test suite
   (`python evals/test_criteria.py`, 32 checks).
