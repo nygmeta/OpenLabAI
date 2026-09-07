@@ -32,9 +32,18 @@ and it never moves a robot without a person explicitly approving that run.
 - The Hamilton MCP server: generates PyLabRobot protocols for a STAR/STARlet and
   dry-runs them through PyLabRobot's chatterbox backend, which logs every command
   instead of sending it to hardware. Verified in simulation. 
+- The LIMS connector (`mcp_servers/lims_server.py`): reads worklists and sample
+  concentrations from a laboratory information management system and writes run
+  records back. Profiles for Benchling, LabWare, STARLIMS, LabVantage, Thermo
+  SampleManager and RETISOFT Genera. Exercised against the mock profile only; not
+  yet connected to a production LIMS.
+- The Slack control surface (`integrations/slack_bot.py`): a scientist requests a
+  protocol in Slack, the agent plans and validates it, and a named person presses
+  Approve before anything moves. Tested offline; not yet run in a live workspace.
 - The eval framework (`evals/`): deck constraint checking, acceptance criteria
   per protocol type, scoring, run logging with a protocol hash, and a test suite
-  (`python evals/test_criteria.py`, 32 checks).
+  (`python evals/test_criteria.py`, 32 checks), plus the Slack approval-flow
+  tests (`python integrations/test_slack_flow.py`, 12 checks).
 - The browser GUI (`gui/BiomekAgent.html`): a single HTML file, no install.
 
 **Partial**
@@ -62,8 +71,8 @@ Each server publishes a small, fixed set of MCP tools with explicit JSON
 schemas — `read_deck`, `get_run_status`, `create_protocol`, and so on. The agent
 cannot issue arbitrary commands, open a socket to the instrument, or reach the
 COM object directly. Anything not on the tool list is not reachable. The full
-inventory is 9 tools for the OT-2, 4 for Hamilton, 3 for the Biomek FXP, and 4
-for Cellario.
+inventory is 9 tools for the OT-2, 4 for Hamilton, 3 for the Biomek FXP, 4 for
+Cellario, and 5 for the LIMS connector.
 
 **2. Protocols are validated before execution.**
 `evals/protocol_evals.py` checks a generated protocol against per-instrument
@@ -80,7 +89,10 @@ idle. `start_run` is the only tool that begins motion, and it refuses unless
 `confirm=true` is passed — which represents a person's approval of that specific
 protocol — and refuses again if the robot's analysis reported errors or if the
 protocol fails the deck constraint checks. `stop_run` is deliberately never
-gated, because stopping is the safe direction. The Biomek, Cellario and Hamilton
+gated, because stopping is the safe direction. Writes to the LIMS are gated the
+same way, because they change the laboratory's system of record. When the gate is
+presented in Slack it is still the same gate: a protocol that fails validation
+cannot be approved, and the approver's identity is recorded. The Biomek, Cellario and Hamilton
 servers execute nothing at all: they write files a person runs through the vendor
 software, and the Hamilton server's `simulate_protocol` uses PyLabRobot's
 chatterbox backend, which never contacts hardware.
@@ -155,6 +167,15 @@ python mcp_servers/ot2_server.py --host 169.254.10.10   # Opentrons OT-2
 python mcp_servers/hamilton_server.py --deck starlet    # Hamilton STAR/STARlet
 python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
 python mcp_servers/cellario_server.py                   # Cellario (Windows)
+python mcp_servers/lims_server.py --lims labware \
+       --base-url https://lims.example.org               # LIMS (see docs/LIMS_AND_SLACK.md)
+```
+
+To drive protocols from Slack instead of a terminal:
+
+```bash
+python integrations/slack_bot.py --dry-run              # no Slack, no robot
+python integrations/slack_bot.py --instrument Hamilton_STAR --require-second-person
 ```
 
 The OT-2 server takes the deck it should generate protocols for, and the operator
@@ -233,6 +254,7 @@ OpenLabAI/
 │   └── slas_boston_case_study.md # SLAS 2026 Boston live demo case study
 ├── docs/
 │   ├── INSTRUMENT_GUIDE.md       # How to connect each instrument
+│   ├── LIMS_AND_SLACK.md         # LIMS profiles and the Slack approval flow
 │   └── SCIENTIST_GUIDE.md        # For scientists with no coding background
 ├── requirements.txt
 ├── LICENSE
