@@ -1,110 +1,183 @@
-# 🧬 OpenLabAI
+# OpenLabAI
 
-**Natural language AI agents for lab robot control — no coding required.**
+**Natural language agents for lab robot control, built on the Model Context Protocol.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen.svg)](https://modelcontextprotocol.io)
-[![PyLabRobot](https://img.shields.io/badge/built%20on-PyLabRobot-orange.svg)](https://github.com/PyLabRobot/pylabrobot)
 
-> *"I had 30 scientists waiting for methods while I was the only automation engineer. OpenLabAI is what I built so that never happens again."*
-> — Ainur Nygmet, ZenoVistaAI Inc.
-
----
-
-## What Is This?
-
-OpenLabAI lets a wet lab scientist describe an experiment in plain English and get a ready-to-run liquid handling protocol in under 5 minutes — without writing a single line of code.
-
-You type:
-```
-Plan an NGS library cleanup: bind 40 µL AMPure beads, 3x 80 µL ethanol wash, elute 20 µL
-```
-
-The agent plans it, shows you a Gantt timeline, and generates the protocol file for your robot.
+OpenLabAI exposes liquid handling instruments to an LLM agent as a small set of
+structured tools, so a scientist can describe a protocol in plain English and get
+a reviewable protocol file back. It does not give the agent raw hardware access,
+and it does not execute protocols on its own.
 
 ---
 
-## The Problem We're Solving
+## Project Status — 7 September 2026
 
-In most biotech labs today, there is **one automation engineer for every 20–30 scientists**. Every time a scientist needs a new liquid handling method, they wait. Days. Sometimes weeks.
+This is an early-stage framework. What follows is the honest current state.
 
-PyLabRobot ([Wierenga et al., 2023](https://doi.org/10.1101/2023.07.10.547733)) and Pioneer Labs ([Mancuso et al., 2026](https://github.com/Pioneer-Research-Labs/ngs_library_prep)) solved the *programmer bottleneck* — they replaced proprietary vendor software with Python. That is a huge step.
+**Runs end to end today**
 
-**OpenLabAI solves the next bottleneck: the scientist still needs to know Python.**
+- The OT-2 MCP server: reads the deck over the Opentrons HTTP API, reports run
+  status, homes the robot, and writes a PyLabRobot protocol file to `protocols/`.
+  The read, status, and home tools have been run against a physical OT-2.
+- The Biomek FXP MCP server: reads deck and method variables over COM and
+  generates `.mth` method files. Generated files have been opened and validated
+  in Biomek Software on a real instrument.
+- The eval framework (`evals/`): deck constraint checking, acceptance criteria
+  per protocol type, scoring, and run logging with a protocol hash.
+- The browser GUI (`gui/BiomekAgent.html`): a single HTML file, no install.
 
-We add a conversational AI layer on top of PyLabRobot so that the scientist talks to the robot directly — in the language of science, not code.
+**Partial**
 
-| | Traditional | PyLabRobot / Pioneer Labs | **OpenLabAI** |
-|---|---|---|---|
-| Who can write protocols | Automation engineer only | Python programmers | **Any scientist** |
-| Interface | Proprietary GUI | Jupyter notebooks | **Plain English chat** |
-| Time to new protocol | Days–weeks | Hours | **Minutes** |
-| Hardware support | One vendor | Hamilton, Tecan, OT-2 | **+ Cellario + Biomek FXP** |
-| AI integration | None | Code assist | **Full conversational agent** |
-| Cost | $50k+ software | Free | **Free** |
+- The Cellario MCP server: the four tools are implemented against the
+  `CellarioAutomation.Application` COM interface, but this connector has only
+  been exercised in mock mode. It has not been run against a physical workcell.
+- Acceptance criteria matching is literal substring matching on step labels. It
+  produces false negatives when a label is worded differently from the criterion
+  (the bundled example in `evals/protocol_evals.py` trips this — see below).
+
+**Planned, not built**
+
+- Hamilton STAR/STARlet connector. There is no `hamilton_server.py` in this
+  repository.
+- Tecan Freedom EVO connector.
+- Protocol upload and execution from the agent. By design, no server here
+  executes a protocol; a human reviews the generated file and runs it through
+  the vendor software. `home_robot()` on the OT-2 is the only tool that moves
+  hardware.
+- The `protocols/` and `resources/` protocol and labware libraries. `protocols/`
+  is created at runtime as the output directory for `create_protocol()`.
+
+---
+
+## Safety and Control
+
+The architecture deliberately puts four barriers between an agent and a moving
+robot. This is the part of the design that matters most.
+
+**1. Instruments are exposed as structured tools, not raw hardware access.**
+Each server publishes a small, fixed set of MCP tools with explicit JSON
+schemas — `read_deck`, `get_run_status`, `create_protocol`, and so on. The agent
+cannot issue arbitrary commands, open a socket to the instrument, or reach the
+COM object directly. Anything not on the tool list is not reachable. The full
+inventory is 4 tools for the OT-2, 3 for the Biomek FXP, and 4 for Cellario.
+
+**2. Protocols are validated before execution.**
+`evals/protocol_evals.py` checks a generated protocol against per-instrument
+deck constraints (volume limits per tip type, valid slot and position names, tip
+availability) and against acceptance criteria for the protocol type (required
+steps, bead ratios, wash cycles, elution volume ranges). It returns a score, a
+pass/fail, and an explicit list of violations.
+
+**3. A human approves before anything physical happens.**
+No server in this repository uploads or executes a protocol. `create_protocol()`
+writes a file to disk; a person reviews it and runs it through the Opentrons App
+or Biomek Software, which applies the vendor's own validation. The single
+exception is the OT-2's `home_robot()`, which moves the gantry to its home
+position.
+
+**4. Every run is logged.**
+`evals/run_logger.py` writes a JSON audit record per run: operator, instrument,
+protocol name, a SHA-256 hash of the protocol, eval score, generation method,
+per-step start and completion timestamps, status, and errors. Intended for
+GxP-adjacent environments where traceability is a requirement.
+
+---
+
+## The Problem
+
+In the labs I have worked in, one automation engineer supports somewhere between
+twenty and thirty scientists. Every new liquid handling method goes through that
+one person, and scientists wait days or weeks. This ratio is my own observation
+from six years at Guardant Health, Personalis, and Hexagon Bio; I am not aware of
+a published survey establishing it as an industry-wide figure.
+
+PyLabRobot ([Wierenga et al., 2023](https://doi.org/10.1101/2023.07.10.547733))
+and Pioneer Labs ([ngs_library_prep](https://github.com/Pioneer-Research-Labs/ngs_library_prep))
+replaced proprietary vendor software with Python, which removes the vendor lock-in
+bottleneck. OpenLabAI is aimed at the next one: the scientist still has to know
+Python. It adds a conversational layer on top, so the scientist describes the
+experiment and reviews a generated protocol instead of writing one.
 
 ---
 
 ## Supported Instruments
 
-| Instrument | Tier | Connection | Status |
-|---|---|---|---|
-| Opentrons OT-2 | Tier 1 — Full live control | HTTP API | ✅ Production |
-| Hamilton STAR/STARLet | Tier 2 — COM automation | PyLabRobot USB | ✅ Production |
-| Cellario workcells | Tier 2 — COM automation | COM interface | ✅ Beta |
-| Beckman Biomek FXP | Tier 3 — File-based | .mth XML files | ✅ Production |
-| Tecan Freedom EVO | Tier 2 — COM automation | PyLabRobot | 🔧 In progress |
+Status values mean: **Implemented** — the tools work and have been run against a
+physical instrument. **Partial** — the code is written but has only run in mock
+mode. **Planned** — not built.
+
+| Instrument | Status | Interface | What is implemented | What is not |
+|---|---|---|---|---|
+| Opentrons OT-2 | Implemented — verified on hardware | Opentrons HTTP API, port 31950 | `read_deck`, `get_run_status`, `home_robot`, `create_protocol`. Read, status, and home tools run against a physical OT-2. | No protocol upload or execution. Generated files are run through the Opentrons App. |
+| Beckman Biomek FXP | Implemented — verified on hardware | COM (`BiomekFX.Application`), Windows | `read_deck`, `get_variables`, `create_protocol` writing `.mth` XML. Generated methods opened and validated in Biomek Software. | No runtime execution — the FXP exposes no runtime API in its standard configuration. Methods are run manually. |
+| Cellario workcells | Partial — mock mode only | COM (`CellarioAutomation.Application`), Windows | `schedule_run`, `get_device_status`, `query_queue`, `get_batch_list` are written against the documented COM interface. | Not yet run against a physical workcell. All results to date are from the mock responder. |
+| Hamilton STAR/STARlet | Planned | PyLabRobot USB firmware interface | Nothing. There is no connector file in this repository. | Everything. |
+| Tecan Freedom EVO | Planned | PyLabRobot | Nothing. | Everything. |
+
+Every server falls back to mock mode when its instrument is unreachable, and
+labels the response `"mode": "mock"`. Mock output is for development and training
+only; it is not evidence that a connector works on hardware.
 
 ---
 
 ## Quick Start
 
-### Option 1: Just the GUI (no installation needed)
+### Option 1: the browser GUI, no installation
 
-Download [`BiomekAgent.html`](gui/BiomekAgent.html), open it in Chrome, paste your Claude API key, and start talking to your robot. No Python, no terminal, no installation.
+Download [`gui/BiomekAgent.html`](gui/BiomekAgent.html), open it in Chrome, and
+paste in a Claude API key. No Python, no terminal.
 
-### Option 2: Full MCP Server (live robot control)
+### Option 2: the MCP servers
 
-**Requirements:** Python 3.13+, pip
+**Requirements:** Python 3.13+, pip. The Cellario and Biomek servers need
+Windows for COM; they start on macOS and Linux but run in mock mode only.
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/nygmeta/OpenLabAI.git
 cd OpenLabAI
-
-# 2. Install dependencies
 pip install -r requirements.txt
-
-# 3. Run the MCP server for your instrument
-python mcp_servers/ot2_server.py        # Opentrons OT-2
-python mcp_servers/biomek_server.py     # Beckman Biomek FXP
-python mcp_servers/cellario_server.py   # Cellario workcells (Windows only)
 ```
 
-**4. Add to your Claude Desktop config** (`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+Run the server for your instrument, from the repository root:
+
+```bash
+python mcp_servers/ot2_server.py --host 169.254.10.10   # Opentrons OT-2
+python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
+python mcp_servers/cellario_server.py                   # Cellario (Windows)
+```
+
+Each server speaks MCP over stdio, so it will appear to hang when run directly —
+that is a server waiting for a client on stdin, not a failure. Point Claude
+Desktop at it by adding to `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "openlab": {
       "command": "python",
-      "args": ["C:/path/to/OpenLabAI/mcp_servers/ot2_server.py"]
+      "args": ["/path/to/OpenLabAI/mcp_servers/ot2_server.py", "--host", "169.254.10.10"]
     }
   }
 }
 ```
 
-**5. Open Claude Desktop and start talking:**
+The config file lives at `%APPDATA%\Claude\claude_desktop_config.json` on Windows
+and `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS.
+
+Then, in Claude Desktop:
+
 ```
 Read my OT-2 deck and tell me what is loaded
 ```
 ```
-Create a 50 µL transfer from well A1 to B1 across all 96 wells, new tips each row
-```
-```
 Plan an AMPure bead cleanup: 1.8x beads, 2x 80% ethanol wash, elute in 20 µL EB
 ```
+
+The agent returns a plan and writes a protocol file to `protocols/`. Review it
+before running it on a robot.
 
 ---
 
@@ -115,62 +188,63 @@ OpenLabAI/
 ├── gui/
 │   └── BiomekAgent.html          # Standalone web GUI — open in Chrome, no install
 ├── mcp_servers/
-│   ├── ot2_server.py             # Opentrons OT-2 MCP server (HTTP API)
-│   ├── biomek_server.py          # Beckman Biomek FXP MCP server (file-based)
-│   └── cellario_server.py        # Cellario workcell MCP server (Windows COM)
+│   ├── ot2_server.py             # Opentrons OT-2 (HTTP API)
+│   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)
+│   └── cellario_server.py        # Cellario workcells (Windows COM)
 ├── evals/
-│   ├── protocol_evals.py         # Acceptance criteria and validation framework
-│   └── run_logger.py             # Audit trail and run logging for regulated environments
-├── protocols/
-│   ├── ngs_cleanup.py            # AMPure bead cleanup (OT-2, PyLabRobot)
-│   ├── normalization.py          # DNA/library normalization
-│   └── serial_dilution.py        # Serial dilution template
-├── resources/
-│   └── custom_labware.py         # Custom labware definitions for PyLabRobot
+│   ├── protocol_evals.py         # Deck constraints, acceptance criteria, scoring
+│   └── run_logger.py             # Audit trail and run logging
 ├── examples/
 │   ├── ngs_cleanup_example.md    # Step-by-step walkthrough
-│   └── slas_boston_case_study.md # SLAS Boston 2026 live demo case study
+│   └── slas_boston_case_study.md # SLAS 2026 Boston live demo case study
 ├── docs/
-│   ├── INSTRUMENT_GUIDE.md       # How to connect each instrument type
+│   ├── INSTRUMENT_GUIDE.md       # How to connect each instrument
 │   └── SCIENTIST_GUIDE.md        # For scientists with no coding background
 ├── requirements.txt
 ├── LICENSE
 └── README.md
 ```
 
+`protocols/` is not checked in. It is created at runtime by `create_protocol()`
+as the output directory for generated protocol files.
+
 ---
 
-## Example Protocols
+## Eval Framework
 
-### NGS Library Cleanup (AMPure Beads)
+`evals/` validates AI-generated protocols before a human is asked to approve them.
 
-```
-You:     Plan an NGS library cleanup. I have 50 µL of PCR product in slot 1.
-         Use 1.8x AMPure beads, 2x 80% ethanol wash, elute in 20 µL EB.
+- **Deck constraint checker** — volume limits per tip type, valid slot and
+  position names, and tip availability, per instrument.
+- **Acceptance criteria** — per protocol type (NGS cleanup, normalization, serial
+  dilution, simple transfer): required steps, bead ratio bounds, minimum wash
+  cycles, elution volume range.
+- **Run logger** — operator, timestamp, per-step status, and SHA-256 protocol hash.
 
-Agent:   Here is your NGS cleanup protocol — 11 steps, ~28 minutes:
+Run the bundled example:
 
-         Step 1:  Pick up tips
-         Step 2:  Aspirate 90 µL AMPure beads from reservoir
-         Step 3:  Dispense beads to sample plate
-         Step 4:  Mix 10x at 80 µL to bind DNA
-         Step 5:  Incubate 5 min on magnet
-         Step 6:  Remove supernatant
-         Step 7:  Ethanol wash 1 — 150 µL
-         Step 8:  Ethanol wash 2 — 150 µL
-         Step 9:  Air dry 2 min
-         Step 10: Add 20 µL EB buffer
-         Step 11: Transfer eluate to destination plate
+```bash
+python evals/protocol_evals.py
+python evals/run_logger.py
 ```
 
-### DNA Normalization
+The eval example prints an overall score of 0.96 with `Passed: False`. That is
+correct behaviour, not a bug: the example's step label "Aspirate AMPure beads"
+does not contain the literal criterion string "aspirate beads", so the
+`has_aspirate_beads` check fails. Criteria matching is literal substring matching
+on labels, which is a known limitation.
 
-```
-You:     Normalize my library plate to 4 nM. Source concentrations are in this CSV.
+```python
+from evals.protocol_evals import evaluate_protocol
 
-Agent:   I will calculate transfer volumes from your concentration data
-         and generate a normalization worklist for the OT-2.
+result = evaluate_protocol(protocol, protocol_type="ngs_cleanup", instrument="OT-2")
+print(result.overall_score)   # float in 0.0–1.0
+print(result.passed)          # True when acceptance passes and score >= 0.80
+print(result.protocol_hash)   # first 16 hex chars of the SHA-256 protocol hash
 ```
+
+Scores depend entirely on the protocol you pass in. No benchmark figure is
+claimed here, because no benchmark has been run.
 
 ---
 
@@ -179,69 +253,47 @@ Agent:   I will calculate transfer volumes from your concentration data
 ```
 Scientist (plain English)
         ↓
-Claude Agent (protocol planning + SFS tree search)
+Claude agent (protocol planning)
         ↓
-MCP Server (tool calls: read_deck, aspirate, create_protocol)
+MCP server (structured tools: read_deck, create_protocol, get_run_status)
         ↓
-PyLabRobot / HTTP API / COM / File
+Opentrons HTTP API  /  Windows COM  /  .mth file output
         ↓
-Physical Robot
+Human review  →  vendor software  →  physical robot
 ```
 
-OpenLabAI uses **Scattered Forest Search** (Light et al., 2024) to generate and validate multiple protocol candidates before committing. This increases first-attempt protocol validity from 54% (single-shot generation) to 87% (SFS).
-
----
-
-## Eval Framework
-
-The `evals/` folder contains a production-grade validation framework for AI-generated protocols:
-
-- **Acceptance criteria** per protocol type (NGS cleanup, normalization, serial dilution)
-- **Deck constraint checker** — validates volumes, positions, tip availability per instrument
-- **Run logger** — full audit trail with operator, timestamp, step status, and protocol hash
-- Designed for **GxP-adjacent environments** requiring traceability
-
-```python
-from evals.protocol_evals import evaluate_protocol
-
-result = evaluate_protocol(protocol, protocol_type="ngs_cleanup", instrument="OT-2")
-print(result.overall_score)   # 0.87
-print(result.passed)          # True
-print(result.protocol_hash)   # abc123...
-```
-
----
-
-## Citing This Work
-
-If you use OpenLabAI in your research, please cite:
-
-```bibtex
-@article{nygmet2026openlabai,
-  title={Natural Language Agents for Laboratory Automation: An MCP-Based Framework
-         for Scientist-Directed Robot Control Without Coding},
-  author={Nygmet, Ainur},
-  journal={bioRxiv},
-  year={2026},
-  institution={ZenoVistaAI Inc.}
-}
-```
-
-This work builds on:
-- [PyLabRobot](https://github.com/PyLabRobot/pylabrobot) — Wierenga et al., 2023
-- [Scattered Forest Search](https://codespace-optimization.github.io/) — Light et al., 2024
-- [Pioneer Labs NGS Library Prep](https://github.com/Pioneer-Research-Labs/ngs_library_prep) — Mancuso et al., 2026
+The design borrows the generate-several-candidates-and-select idea from
+Scattered Forest Search ([Light et al., 2024](https://codespace-optimization.github.io/)),
+which reports its own results on code generation benchmarks. Those results are
+for code generation, not laboratory protocols, and no equivalent measurement has
+been made for OpenLabAI. Any first-attempt validity rate for protocol generation
+would need its own benchmark, which has not been run.
 
 ---
 
 ## Contributing
 
-We welcome contributions — especially from wet lab scientists who can tell us what is missing.
+Contributions welcome, especially from wet lab scientists who can say what is
+missing.
 
-- **Found a bug?** Open a GitHub Issue
-- **New instrument backend?** Open a PR with your MCP server
-- **New labware definitions?** Add to `resources/custom_labware.py`
-- **Protocol templates?** Add to `protocols/`
+- **Found a bug?** Open a GitHub issue.
+- **New instrument backend?** Open a PR adding a server under `mcp_servers/`.
+  The Hamilton connector is the most useful gap.
+- **Protocol templates or labware definitions?** Open an issue first — there is
+  no library structure yet and it is worth agreeing on one.
+
+---
+
+## References
+
+If you use OpenLabAI, please link to this repository. There is no paper to cite.
+
+This work builds on:
+
+- [PyLabRobot](https://github.com/PyLabRobot/pylabrobot) — Wierenga, Golas, Ho and
+  Coley, 2023. [doi:10.1101/2023.07.10.547733](https://doi.org/10.1101/2023.07.10.547733)
+- [Scattered Forest Search](https://codespace-optimization.github.io/) — Light et al., 2024
+- [Pioneer Labs NGS library prep](https://github.com/Pioneer-Research-Labs/ngs_library_prep)
 
 ---
 
@@ -249,16 +301,20 @@ We welcome contributions — especially from wet lab scientists who can tell us 
 
 Built by **Ainur Nygmet** at ZenoVistaAI Inc.
 
-Background: 6+ years as a lab automation engineer at Guardant Health, Personalis, and Hexagon Bio. Developed 50+ Hamilton methods, trained 40+ scientists on lab automation, certified Cellario operator. Demonstrated live AI-driven workcell orchestration at SLAS Boston 2025.
+Six years as a lab automation engineer at Guardant Health, Personalis, and
+Hexagon Bio: 50+ Hamilton methods developed, 40+ scientists trained on lab
+automation, certified Cellario operator. Demonstrated live AI-driven workcell
+orchestration at the SLAS 2026 International Conference and Exhibition in Boston,
+February 2026 — see [examples/slas_boston_case_study.md](examples/slas_boston_case_study.md).
 
-This project exists because I was the bottleneck. I do not want anyone else to be.
+This project exists because I was the bottleneck.
 
-**Contact:** nygmetainur@gmail.com
-**LinkedIn:** [Ainur Nygmet](https://linkedin.com/in/nygmetainur)
-**GitHub:** [nygmeta](https://github.com/nygmeta)
+**Contact:** nygmetainur@gmail.com ·
+[LinkedIn](https://linkedin.com/in/nygmetainur) ·
+[GitHub](https://github.com/nygmeta)
 
 ---
 
 ## License
 
-MIT License — free to use, modify, and share. See [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE).
