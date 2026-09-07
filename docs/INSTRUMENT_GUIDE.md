@@ -8,14 +8,45 @@ All commands are run from the repository root.
 
 ---
 
-## Opentrons OT-2 — Implemented
+## Opentrons OT-2 — Implemented (execution not yet hardware-verified)
 
 **What you get:** The agent reads your actual deck over the Opentrons HTTP API,
 reports run status, homes the robot, and generates a PyLabRobot protocol file.
 
-**What you do not get:** protocol upload or execution. The server writes a file to
-`protocols/`; you review it and run it through the Opentrons App. `home_robot()`
-is the only tool that moves the robot.
+**Execution.** The server can also upload and run protocols, behind an approval
+gate:
+
+1. `create_protocol` writes an Opentrons Python API file to `protocols/`.
+2. `upload_protocol` sends it to the robot, waits for the robot's own analysis,
+   and creates a run in the **idle** state. Nothing moves. It returns any
+   analysis errors and any deck constraint violations.
+3. You review the protocol.
+4. `start_run` begins execution, and only with `confirm=true`. It refuses if the
+   analysis reported errors or the constraint checks failed.
+5. `pause_run`, `resume_run` and `stop_run` control the run. `stop_run` is never
+   gated — stopping is always allowed.
+
+Every start, pause, resume and stop is written to the audit log.
+
+**Status:** the read, status, home and generate tools have been run against a
+physical OT-2. The execution tools have not — they are written against the
+documented Opentrons HTTP API and their refusal paths are tested, but no robot
+has yet executed a protocol through them. Treat the first hardware run as a
+commissioning step: use a plate of water, watch it, and keep a hand near the
+stop.
+
+**Setting your deck.** Generated protocols use the pipette and tip rack you pass
+at startup:
+
+```bash
+python mcp_servers/ot2_server.py --host 169.254.10.10 \
+  --pipette p1000_single_gen2 --mount right \
+  --tiprack opentrons_96_tiprack_1000ul --operator "your name"
+```
+
+`create_protocol` also takes a `format`: `opentrons` (default, uploadable and
+runnable) or `pylabrobot` (a script that runs on your computer and drives the
+robot over the network — it cannot be uploaded).
 
 **Requirements:**
 - OT-2 connected to your computer via USB or on the same WiFi network
@@ -36,15 +67,44 @@ If it returns your actual labware, you're connected. 🎉
 
 ---
 
-## Hamilton STAR / STARlet — Planned
+## Hamilton STAR / STARlet — Partial (simulation only)
 
-**Not built.** There is no `hamilton_server.py` in this repository. This section
-describes the intended approach, not working software.
+**Status:** the connector exists and generates protocols that dry-run
+successfully through PyLabRobot's chatterbox backend. **It has never been
+connected to a physical Hamilton.** Everything below the simulation step is
+untested.
 
-The plan is to wrap PyLabRobot's USB firmware interface, which would require a
-Windows PC and the libusbK driver in place of Hamilton's default driver (see the
-[PyLabRobot documentation](https://docs.pylabrobot.org)). This is the most useful
-open contribution to the project.
+**What you get:**
+- `read_deck` — the deck geometry the server builds: a `TIP_CAR_480_A00` tip
+  carrier on rail 1 holding `tips_1`–`tips_5`, and a `PLT_CAR_L5AC_A00` plate
+  carrier on rail 10 holding `plate_1`–`plate_5`. Address labware by those names
+  plus a column number 1–12.
+- `create_protocol` — writes a PyLabRobot script to `protocols/`.
+- `simulate_protocol` — dry-runs it through `LiquidHandlerChatterboxBackend`,
+  which logs every command instead of sending it to hardware. Safe with no
+  instrument attached.
+- `get_status` — reports connection state and PyLabRobot availability.
+
+**Setup:**
+```bash
+python mcp_servers/hamilton_server.py --deck starlet   # or --deck star
+```
+
+**Requirements for simulation:** just `pip install -r requirements.txt`. No
+hardware, no Windows.
+
+**Requirements for a live run (not exercised):** Windows, a STAR or STARlet on
+USB, and the libusbK driver in place of Hamilton's default driver. See the
+[PyLabRobot documentation](https://docs.pylabrobot.org). A generated protocol run
+without `--simulate` will attempt to drive real hardware.
+
+**Verifying a protocol before hardware:**
+```bash
+python protocols/YourProtocol.py --simulate
+```
+
+Someone with a physical STAR or STARlet verifying this connector would be the
+most useful contribution to the project.
 
 ---
 
@@ -153,3 +213,10 @@ API from `mcp` 1.x. Install the pinned version:
 ```bash
 pip install -r requirements.txt
 ```
+
+## "The protocol references a resource that is not on the deck"
+
+PyLabRobot raises `ResourceNotFoundError` when a protocol addresses labware the
+deck does not have. On the Hamilton server the valid names are `tips_1`–`tips_5`
+and `plate_1`–`plate_5`; on the OT-2 they are `source`, `destination` and
+`reservoir`, optionally qualified as `source:A1`. `read_deck` lists them.

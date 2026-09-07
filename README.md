@@ -9,7 +9,7 @@
 OpenLabAI exposes liquid handling instruments to an LLM agent as a small set of
 structured tools, so a scientist can describe a protocol in plain English and get
 a reviewable protocol file back. It does not give the agent raw hardware access,
-and it does not execute protocols on its own.
+and it never moves a robot without a person explicitly approving that run.
 
 ---
 
@@ -20,13 +20,23 @@ This is an early-stage framework. What follows is the honest current state.
 **Runs end to end today**
 
 - The OT-2 MCP server: reads the deck over the Opentrons HTTP API, reports run
-  status, homes the robot, and writes a PyLabRobot protocol file to `protocols/`.
-  The read, status, and home tools have been run against a physical OT-2.
+  status, homes the robot, generates protocols, and can upload and execute them
+  under an explicit approval gate. The read, status, home and generate tools have
+  been run against a physical OT-2. **The execution tools — `upload_protocol`,
+  `start_run`, `pause_run`, `resume_run`, `stop_run` — have not yet been run
+  against a physical OT-2.** They are written against the documented Opentrons
+  HTTP API and their refusal paths are tested, but no robot has executed a
+  protocol through them.
 - The Biomek FXP MCP server: reads deck and method variables over COM and
   generates `.mth` method files. Generated files have been opened and validated
   in Biomek Software on a real instrument.
+- The Hamilton MCP server: generates PyLabRobot protocols for a STAR/STARlet and
+  dry-runs them through PyLabRobot's chatterbox backend, which logs every command
+  instead of sending it to hardware. Verified in simulation only — no physical
+  Hamilton has been connected.
 - The eval framework (`evals/`): deck constraint checking, acceptance criteria
-  per protocol type, scoring, and run logging with a protocol hash.
+  per protocol type, scoring, run logging with a protocol hash, and a test suite
+  (`python evals/test_criteria.py`, 32 checks).
 - The browser GUI (`gui/BiomekAgent.html`): a single HTML file, no install.
 
 **Partial**
@@ -34,23 +44,15 @@ This is an early-stage framework. What follows is the honest current state.
 - The Cellario MCP server: the four tools are implemented against the
   `CellarioAutomation.Application` COM interface, but this connector has only
   been exercised in mock mode. It has not been run against a physical workcell.
-- Acceptance criteria matching is literal substring matching on step labels. It
-  produces false negatives when a label is worded differently from the criterion
-  (the bundled example in `evals/protocol_evals.py` trips this — see below).
+- The Hamilton connector is simulation-verified only, as above. A live connection
+  additionally needs Windows, USB, and the libusbK driver, none of which has been
+  exercised.
 
 **Planned, not built**
 
-- Hamilton STAR/STARlet connector. There is no `hamilton_server.py` in this
-  repository.
 - Tecan Freedom EVO connector.
-- Protocol upload and execution from the agent. By design, no server here
-  executes a protocol; a human reviews the generated file and runs it through
-  the vendor software. `home_robot()` on the OT-2 is the only tool that moves
-  hardware.
-- The `protocols/` and `resources/` protocol and labware libraries. `protocols/`
-  is created at runtime as the output directory for `create_protocol()`.
-
----
+- The `resources/` labware library. `protocols/` is created at runtime as the
+  output directory for `create_protocol()`.
 
 ## Safety and Control
 
@@ -62,7 +64,8 @@ Each server publishes a small, fixed set of MCP tools with explicit JSON
 schemas — `read_deck`, `get_run_status`, `create_protocol`, and so on. The agent
 cannot issue arbitrary commands, open a socket to the instrument, or reach the
 COM object directly. Anything not on the tool list is not reachable. The full
-inventory is 4 tools for the OT-2, 3 for the Biomek FXP, and 4 for Cellario.
+inventory is 9 tools for the OT-2, 4 for Hamilton, 3 for the Biomek FXP, and 4
+for Cellario.
 
 **2. Protocols are validated before execution.**
 `evals/protocol_evals.py` checks a generated protocol against per-instrument
@@ -72,11 +75,17 @@ steps, bead ratios, wash cycles, elution volume ranges). It returns a score, a
 pass/fail, and an explicit list of violations.
 
 **3. A human approves before anything physical happens.**
-No server in this repository uploads or executes a protocol. `create_protocol()`
-writes a file to disk; a person reviews it and runs it through the Opentrons App
-or Biomek Software, which applies the vendor's own validation. The single
-exception is the OT-2's `home_robot()`, which moves the gantry to its home
-position.
+The OT-2 server can execute protocols, and the approval gate is where that is
+made safe. `upload_protocol` talks to the robot but moves nothing: it uploads the
+file, waits for the robot's own protocol analysis, and creates a run that sits
+idle. `start_run` is the only tool that begins motion, and it refuses unless
+`confirm=true` is passed — which represents a person's approval of that specific
+protocol — and refuses again if the robot's analysis reported errors or if the
+protocol fails the deck constraint checks. `stop_run` is deliberately never
+gated, because stopping is the safe direction. The Biomek, Cellario and Hamilton
+servers execute nothing at all: they write files a person runs through the vendor
+software, and the Hamilton server's `simulate_protocol` uses PyLabRobot's
+chatterbox backend, which never contacts hardware.
 
 **4. Every run is logged.**
 `evals/run_logger.py` writes a JSON audit record per run: operator, instrument,
@@ -111,10 +120,10 @@ mode. **Planned** — not built.
 
 | Instrument | Status | Interface | What is implemented | What is not |
 |---|---|---|---|---|
-| Opentrons OT-2 | Implemented — verified on hardware | Opentrons HTTP API, port 31950 | `read_deck`, `get_run_status`, `home_robot`, `create_protocol`. Read, status, and home tools run against a physical OT-2. | No protocol upload or execution. Generated files are run through the Opentrons App. |
+| Opentrons OT-2 | Implemented — partly verified on hardware | Opentrons HTTP API, port 31950 | `read_deck`, `get_run_status`, `home_robot`, `create_protocol` (Opentrons API and PyLabRobot formats), plus `upload_protocol`, `start_run`, `pause_run`, `resume_run`, `stop_run`. Read, status, home and generate have run against a physical OT-2. | The execution tools have not been run against a physical OT-2. Their refusal paths are tested; the successful-run path is not hardware-verified. |
 | Beckman Biomek FXP | Implemented — verified on hardware | COM (`BiomekFX.Application`), Windows | `read_deck`, `get_variables`, `create_protocol` writing `.mth` XML. Generated methods opened and validated in Biomek Software. | No runtime execution — the FXP exposes no runtime API in its standard configuration. Methods are run manually. |
+| Hamilton STAR/STARlet | Partial — simulation only | PyLabRobot STAR backend | `read_deck`, `get_status`, `create_protocol`, `simulate_protocol`. Generated protocols dry-run through PyLabRobot's chatterbox backend. | Never connected to a physical Hamilton. No execution tool. A live connection needs Windows, USB and the libusbK driver, none of it exercised. |
 | Cellario workcells | Partial — mock mode only | COM (`CellarioAutomation.Application`), Windows | `schedule_run`, `get_device_status`, `query_queue`, `get_batch_list` are written against the documented COM interface. | Not yet run against a physical workcell. All results to date are from the mock responder. |
-| Hamilton STAR/STARlet | Planned | PyLabRobot USB firmware interface | Nothing. There is no connector file in this repository. | Everything. |
 | Tecan Freedom EVO | Planned | PyLabRobot | Nothing. | Everything. |
 
 Every server falls back to mock mode when its instrument is unreachable, and
@@ -145,8 +154,18 @@ Run the server for your instrument, from the repository root:
 
 ```bash
 python mcp_servers/ot2_server.py --host 169.254.10.10   # Opentrons OT-2
+python mcp_servers/hamilton_server.py --deck starlet    # Hamilton STAR/STARlet
 python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
 python mcp_servers/cellario_server.py                   # Cellario (Windows)
+```
+
+The OT-2 server takes the deck it should generate protocols for, and the operator
+name recorded in the audit log:
+
+```bash
+python mcp_servers/ot2_server.py --host 169.254.10.10 \
+  --pipette p1000_single_gen2 --mount right \
+  --tiprack opentrons_96_tiprack_1000ul --operator "your name"
 ```
 
 Each server speaks MCP over stdio, so it will appear to hang when run directly —
@@ -176,8 +195,23 @@ Read my OT-2 deck and tell me what is loaded
 Plan an AMPure bead cleanup: 1.8x beads, 2x 80% ethanol wash, elute in 20 µL EB
 ```
 
-The agent returns a plan and writes a protocol file to `protocols/`. Review it
-before running it on a robot.
+The agent returns a plan and writes a protocol file to `protocols/`. To run it:
+
+```
+Upload that protocol to the robot and tell me what the analysis says
+```
+
+`upload_protocol` sends the file, waits for the robot's own analysis, and creates
+a run that sits idle — nothing moves. Review the protocol, then approve it
+explicitly:
+
+```
+I have reviewed it. Start the run.
+```
+
+The agent calls `start_run` with `confirm=true`. It will refuse if the robot's
+analysis reported errors, or if the protocol fails the deck constraint checks.
+`stop_run` is never gated.
 
 ---
 
@@ -188,12 +222,14 @@ OpenLabAI/
 ├── gui/
 │   └── BiomekAgent.html          # Standalone web GUI — open in Chrome, no install
 ├── mcp_servers/
-│   ├── ot2_server.py             # Opentrons OT-2 (HTTP API)
+│   ├── ot2_server.py             # Opentrons OT-2 (HTTP API, can execute)
+│   ├── hamilton_server.py        # Hamilton STAR/STARlet (PyLabRobot, simulation)
 │   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)
 │   └── cellario_server.py        # Cellario workcells (Windows COM)
 ├── evals/
 │   ├── protocol_evals.py         # Deck constraints, acceptance criteria, scoring
-│   └── run_logger.py             # Audit trail and run logging
+│   ├── run_logger.py             # Audit trail and run logging
+│   └── test_criteria.py          # Tests for criteria matching and score ranges
 ├── examples/
 │   ├── ngs_cleanup_example.md    # Step-by-step walkthrough
 │   └── slas_boston_case_study.md # SLAS 2026 Boston live demo case study
@@ -218,21 +254,24 @@ as the output directory for generated protocol files.
   position names, and tip availability, per instrument.
 - **Acceptance criteria** — per protocol type (NGS cleanup, normalization, serial
   dilution, simple transfer): required steps, bead ratio bounds, minimum wash
-  cycles, elution volume range.
+  cycles, elution volume range. Step labels are matched by token and synonym, so
+  a criterion is satisfied by the wordings scientists actually use.
 - **Run logger** — operator, timestamp, per-step status, and SHA-256 protocol hash.
 
-Run the bundled example:
+Run the bundled example and the tests:
 
 ```bash
 python evals/protocol_evals.py
 python evals/run_logger.py
+python evals/test_criteria.py
 ```
 
-The eval example prints an overall score of 0.96 with `Passed: False`. That is
-correct behaviour, not a bug: the example's step label "Aspirate AMPure beads"
-does not contain the literal criterion string "aspirate beads", so the
-`has_aspirate_beads` check fails. Criteria matching is literal substring matching
-on labels, which is a known limitation.
+Criteria matching is token-based with synonyms, not literal substring matching,
+so ordinary wordings are recognised: "Aspirate AMPure beads" and "Add 90 uL SPRI
+beads to sample" both satisfy the `aspirate_beads` criterion. It is not merely
+permissive — "Aspirate 50 uL of sample" does not satisfy it, and "Wash with PBS"
+does not satisfy `ethanol_wash`. `evals/test_criteria.py` covers both directions
+plus score-range and constraint checks, and exits non-zero on failure.
 
 ```python
 from evals.protocol_evals import evaluate_protocol
@@ -255,11 +294,15 @@ Scientist (plain English)
         ↓
 Claude agent (protocol planning)
         ↓
-MCP server (structured tools: read_deck, create_protocol, get_run_status)
+MCP server (structured tools: read_deck, create_protocol, upload_protocol, ...)
         ↓
-Opentrons HTTP API  /  Windows COM  /  .mth file output
+Opentrons HTTP API  /  PyLabRobot  /  Windows COM  /  .mth file output
         ↓
-Human review  →  vendor software  →  physical robot
+Robot analysis + deck constraint checks
+        ↓
+Human approval (confirm=true)  →  physical robot
+        ↓
+Audit log
 ```
 
 The design borrows the generate-several-candidates-and-select idea from
@@ -278,7 +321,8 @@ missing.
 
 - **Found a bug?** Open a GitHub issue.
 - **New instrument backend?** Open a PR adding a server under `mcp_servers/`.
-  The Hamilton connector is the most useful gap.
+  Tecan is the remaining gap; the Hamilton connector needs someone with physical
+  hardware to verify it.
 - **Protocol templates or labware definitions?** Open an issue first — there is
   no library structure yet and it is worth agreeing on one.
 

@@ -4,9 +4,12 @@
 This guide is for wet lab scientists who want to use OpenLabAI to plan protocols.
 No programming knowledge required.
 
-One thing to know up front: OpenLabAI plans and writes protocols, it does not run
-them. You review the generated file and start the run yourself in the Opentrons
-App or Biomek Software. Nothing moves without you.
+One thing to know up front: nothing moves without you. OpenLabAI plans and writes
+protocols. On the Biomek and Hamilton it stops there — you open the generated file
+in the vendor software and start the run yourself. On the Opentrons OT-2 the agent
+can start a run, but only after you have reviewed the protocol and explicitly told
+it to. It will refuse otherwise, and it will refuse if the robot's own analysis
+found a problem. You can stop a run at any time, and stopping is never gated.
 
 ---
 

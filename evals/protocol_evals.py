@@ -62,9 +62,14 @@ DECK_CONSTRAINTS = {
         "min_aspiration_height_mm": 0.1,
     },
     "Hamilton_STAR": {
+        # Position names match the deck built by mcp_servers/hamilton_server.py.
+        # PyLabRobot addresses a STAR/STARlet by rail-mounted carriers, not by the
+        # P1-P21 labels used by the Biomek; a protocol validated here therefore
+        # uses names the generated deck actually has.
         "max_volume_1000ul": 1000,
         "max_volume_300ul": 300,
-        "valid_positions": [f"P{i}" for i in range(1, 22)] + ["TL1", "TR1"],
+        "valid_positions": ([f"tips_{i}" for i in range(1, 6)]
+                            + [f"plate_{i}" for i in range(1, 6)]),
         "span8_channels": 8,
     },
     "Biomek_FXP": {
@@ -168,6 +173,72 @@ class DeckConstraintChecker:
         return sum(checks) / len(checks)
 
 
+# ── CRITERION MATCHING ────────────────────────────────────────────────────────
+
+# Each required step name maps to a list of token groups. A step label satisfies
+# the criterion when every group has at least one of its alternatives present in
+# the label. This replaces literal substring matching, which produced false
+# negatives whenever a scientist worded a label naturally: the label
+# "Aspirate AMPure beads" does not contain the string "aspirate beads".
+CRITERION_PATTERNS = {
+    "aspirate_beads": [
+        ("aspirate", "transfer", "add", "dispense", "pipette"),
+        ("bead", "ampure", "spri", "carboxyl"),
+    ],
+    "mix": [("mix", "resuspend", "triturate", "homogen")],
+    "magnet_incubation": [
+        ("magnet", "magnetic", "mag stand", "magstand"),
+        ("incubat", "bind", "settle", "separat", "capture", "wait", "hold", "min"),
+    ],
+    "remove_supernatant": [
+        ("remove", "discard", "aspirate", "withdraw", "pull"),
+        ("supernatant", "sup", "liquid", "eluate"),
+    ],
+    "ethanol_wash": [("ethanol", "etoh", "alcohol"), ("wash", "rinse")],
+    "air_dry": [("dry", "evaporat", "air")],
+    "elute": [("elut", "resuspend", "recover"), ("eb", "buffer", "water", "te", "tris", "elut")],
+    "measure_or_accept_concentration": [
+        ("measure", "read", "quantif", "quant", "accept", "import", "load", "input"),
+        ("concentration", "conc", "nm", "ng/", "qubit", "tapestation"),
+    ],
+    "calculate_volumes": [
+        ("calculat", "comput", "determin", "deriv", "solve"),
+        ("volume", "vol", "transfer", "dilution"),
+    ],
+    "transfer": [("transfer", "move", "aspirate", "dispense")],
+    "diluent_dispense": [
+        ("diluent", "buffer", "water", "eb", "media", "medium"),
+        ("dispense", "add", "fill", "distribute"),
+    ],
+    "transfer_and_mix": [("transfer", "move", "serial"), ("mix", "resuspend")],
+    "aspirate": [("aspirate", "draw", "pick up", "uptake")],
+    "dispense": [("dispense", "deliver", "eject", "expel")],
+}
+
+
+def _normalise(label: str) -> str:
+    """Lower-case and collapse punctuation so token matching is not defeated by
+    hyphens, slashes or double spaces."""
+    out = []
+    for ch in label.lower():
+        out.append(ch if (ch.isalnum() or ch in "/%.") else " ")
+    return " ".join("".join(out).split())
+
+
+def criterion_matches(criterion: str, label: str) -> bool:
+    """True when `label` satisfies `criterion`.
+
+    Falls back to the original literal match for criteria with no pattern
+    defined, so adding a new criterion to ACCEPTANCE_CRITERIA without a pattern
+    still behaves predictably rather than silently always passing.
+    """
+    text = _normalise(label)
+    groups = CRITERION_PATTERNS.get(criterion)
+    if groups is None:
+        return criterion.replace("_", " ") in text
+    return all(any(alt in text for alt in group) for group in groups)
+
+
 # ── ACCEPTANCE CRITERIA CHECKER ───────────────────────────────────────────────
 
 class AcceptanceCriteriaChecker:
@@ -190,7 +261,7 @@ class AcceptanceCriteriaChecker:
         step_labels = [s.get("label", "").lower() for s in steps]
 
         for req in required:
-            found = any(req.replace("_", " ") in label for label in step_labels)
+            found = any(criterion_matches(req, label) for label in step_labels)
             self.details[f"has_{req}"] = found
             if not found:
                 passed = False
