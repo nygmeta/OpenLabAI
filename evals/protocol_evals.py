@@ -19,7 +19,7 @@ import time
 import hashlib
 from dataclasses import dataclass, field, asdict
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # ── ACCEPTANCE CRITERIA ──────────────────────────────────────────────────────
@@ -178,7 +178,8 @@ class AcceptanceCriteriaChecker:
 
     def __init__(self, protocol_type: str):
         self.criteria = ACCEPTANCE_CRITERIA.get(protocol_type, {})
-        self.details = {}
+        self.details = {}        # boolean pass/fail per criterion — used for scoring
+        self.measurements = {}   # measured values — informational only, not scored
 
     def check(self, steps: list, params: dict = None) -> tuple[bool, dict]:
         params = params or {}
@@ -196,8 +197,10 @@ class AcceptanceCriteriaChecker:
 
         if "min_wash_cycles" in self.criteria:
             wash_count = sum(1 for l in step_labels if "wash" in l or "etoh" in l or "ethanol" in l)
-            self.details["wash_cycles"] = wash_count
-            if wash_count < self.criteria["min_wash_cycles"]:
+            wash_ok = wash_count >= self.criteria["min_wash_cycles"]
+            self.details["wash_cycles_ok"] = wash_ok
+            self.measurements["wash_cycles"] = wash_count
+            if not wash_ok:
                 passed = False
 
         if "elution_volume_range" in self.criteria:
@@ -205,8 +208,10 @@ class AcceptanceCriteriaChecker:
             elution_steps = [s for s in steps if "elut" in s.get("label", "").lower()]
             if elution_steps:
                 vol = elution_steps[-1].get("volume_ul", 0)
-                self.details["elution_volume"] = vol
-                if not (lo <= vol <= hi):
+                elution_ok = lo <= vol <= hi
+                self.details["elution_volume_ok"] = elution_ok
+                self.measurements["elution_volume"] = vol
+                if not elution_ok:
                     passed = False
 
         return passed, self.details
@@ -245,7 +250,9 @@ def evaluate_protocol(
     # 2. Acceptance criteria (semantic accuracy)
     ac_checker = AcceptanceCriteriaChecker(protocol_type)
     acceptance_passed, acceptance_details = ac_checker.check(steps)
-    semantic_score = sum(acceptance_details.values()) / max(len(acceptance_details), 1) if acceptance_details else 0.5
+    # Only boolean criteria contribute to the score; measured values are informational.
+    bool_checks = [v for v in acceptance_details.values() if isinstance(v, bool)]
+    semantic_score = sum(bool_checks) / len(bool_checks) if bool_checks else 0.5
 
     # 3. Syntactic validity (does it have required fields)
     has_name = bool(protocol.get("protocol_name"))
@@ -259,7 +266,7 @@ def evaluate_protocol(
     return ProtocolEvalResult(
         protocol_name=protocol.get("protocol_name", "unnamed"),
         instrument=instrument,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         generation_method=generation_method,
         generation_time_seconds=generation_time,
         syntactic_validity=round(syntactic_score, 3),

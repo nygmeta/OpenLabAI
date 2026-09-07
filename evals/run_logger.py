@@ -16,7 +16,7 @@ Usage:
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
 
@@ -82,9 +82,9 @@ class RunLogger:
             instrument=instrument,
             protocol_name=protocol_name,
             protocol_hash="",
-            started_at=datetime.utcnow().isoformat(),
+            started_at=datetime.now(timezone.utc).isoformat(),
         )
-        self.log_path = LOG_DIR / f"run_{self.run_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+        self.log_path = LOG_DIR / f"run_{self.run_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
         print(f"[RunLogger] Run {self.run_id} started — {operator} on {instrument}")
 
     def log_protocol_generated(self, protocol: dict, protocol_hash: str = "", eval_score: float = 0.0, generation_method: str = "single_shot"):
@@ -95,7 +95,7 @@ class RunLogger:
         self.log.total_steps = len(protocol.get("steps", []))
         self.log.agent_messages.append({
             "type": "protocol_generated",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "protocol_name": self.log.protocol_name,
             "steps": self.log.total_steps,
             "eval_score": eval_score,
@@ -107,7 +107,7 @@ class RunLogger:
             "type": "chat",
             "role": role,
             "content": content[:500],
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
     def log_step_started(self, step: dict) -> StepLog:
@@ -116,7 +116,7 @@ class RunLogger:
             label=step.get("label", ""),
             type=step.get("type", ""),
             status="in_progress",
-            started_at=datetime.utcnow().isoformat(),
+            started_at=datetime.now(timezone.utc).isoformat(),
             volume_ul=step.get("volume_ul", 0),
             source=step.get("source", ""),
             destination=step.get("dest", ""),
@@ -129,7 +129,7 @@ class RunLogger:
         for step in self.log.steps:
             if step["step_id"] == step_id:
                 step["status"] = status
-                step["completed_at"] = datetime.utcnow().isoformat()
+                step["completed_at"] = datetime.now(timezone.utc).isoformat()
                 step["error"] = error
                 step["notes"] = notes
                 break
@@ -140,7 +140,7 @@ class RunLogger:
         self._autosave()
 
     def log_run_complete(self, status: str = "completed", notes: str = ""):
-        self.log.completed_at = datetime.utcnow().isoformat()
+        self.log.completed_at = datetime.now(timezone.utc).isoformat()
         self.log.status = status
         self.log.notes = notes
         self._autosave()
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         "protocol_name": "NGS_Cleanup_Test",
         "steps": [{"id": 1, "label": "Aspirate beads", "type": "aspirate", "volume_ul": 90, "source": "10", "dest": "1"}]
     }
-    logger.log_protocol_generated(mock_protocol, protocol_hash="abc123", eval_score=0.87, generation_method="sfs")
+    logger.log_protocol_generated(mock_protocol, protocol_hash="abc123", eval_score=0.87, generation_method="sfs")  # illustrative values
     logger.log_agent_message("user", "Run an NGS cleanup on my library plate")
     logger.log_agent_message("assistant", "Protocol generated — 10 steps, 28 min estimated")
 
