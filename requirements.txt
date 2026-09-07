@@ -1,7 +1,14 @@
-mcp>=1.27.0
-pywin32>=311
-pylabrobot>=0.2.0
+# Core: MCP server framework.
+# Pinned below 2.0 — the servers use the low-level mcp.server.Server decorator
+# API (@app.list_tools / @app.call_tool), which changed in mcp 2.x.
+mcp>=1.27.0,<2
+
+# OT-2 server: HTTP client for the Opentrons REST API.
 httpx>=0.28.0
-pydantic>=2.11.0
-asyncio-mqtt>=0.16.0
-python-dotenv>=1.2.0
+
+# Required to run the protocol files that create_protocol generates.
+pylabrobot>=0.2.0
+
+# Windows only. Required by the Cellario and Biomek FXP servers for COM
+# automation; both fall back to mock mode when it is absent.
+pywin32>=311; sys_platform == "win32"

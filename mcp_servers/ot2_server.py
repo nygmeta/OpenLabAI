@@ -1,16 +1,20 @@
 """
-Lab-Assistant: Opentrons OT-2 MCP Server
-Provides live bidirectional control of OT-2 via HTTP API.
+OpenLabAI: Opentrons OT-2 MCP Server
+Reads OT-2 state over the Opentrons HTTP API and generates protocol files.
 
 Usage:
-    python ot2_server.py --host 169.254.x.x
+    python mcp_servers/ot2_server.py --host 169.254.x.x
 
 Tools exposed to Claude:
     read_deck()        - Read current deck layout
-    run_protocol()     - Upload and execute a protocol
-    get_run_status()   - Poll current run status
+    get_run_status()   - Poll the status of the most recent run
     home_robot()       - Home all axes
-    create_protocol()  - Generate a PyLabRobot protocol file
+    create_protocol()  - Generate a PyLabRobot protocol file to ./protocols/
+
+Not implemented: this server does not upload or execute protocols. Generated
+files are reviewed by a human and run through the Opentrons App. The only tool
+that moves hardware is home_robot(). If the robot is unreachable, read_deck()
+returns a mock deck layout clearly labelled "mode": "mock".
 """
 
 import json

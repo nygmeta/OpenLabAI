@@ -1,5 +1,5 @@
 """
-Lab-Assistant: Cellario Workcell MCP Server
+OpenLabAI: Cellario Workcell MCP Server
 Provides orchestration of integrated robotic workcells via Cellario COM automation.
 
 Requirements:
@@ -8,7 +8,7 @@ Requirements:
     - Cellario must be open before starting this server
 
 Usage:
-    python cellario_server.py
+    python mcp_servers/cellario_server.py
 
 Tools exposed to Claude:
     schedule_run()      - Start a workcell batch from a batch definition

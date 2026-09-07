@@ -6,14 +6,14 @@ Requirements:
   pip install mcp pywin32
 
 Usage:
-  python server.py
+  python mcp_servers/biomek_server.py
 
 Then add to your Claude MCP config (claude_desktop_config.json):
 {
   "mcpServers": {
     "biomek": {
       "command": "python",
-      "args": ["C:/path/to/biomek_mcp/server.py"]
+      "args": ["C:/path/to/OpenLabAI/mcp_servers/biomek_server.py"]
     }
   }
 }
