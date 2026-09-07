@@ -1,8 +1,9 @@
-# Case Study: SLAS Boston 2025 — Ginkgo Bioworks Live Demo
+# Case Study: SLAS 2026 Boston — Ginkgo Bioworks Live Demo
 
 ## Overview
 
-At SLAS Boston 2025, we demonstrated live AI-driven lab orchestration by integrating
+At the SLAS 2026 International Conference and Exhibition in Boston (February 2026),
+we demonstrated live AI-driven lab orchestration by integrating
 a Unitree G1 humanoid robot with Ginkgo Bioworks' Robotic Automated Cloning System (RACS)
 — using an LLM agent as the coordination layer between physical robot actions and
 automated lab workflows.
@@ -58,7 +59,7 @@ Scientist (natural language intent)
 ### Reusable patterns extracted
 - MCP tool schema for workcell status queries → reused in Cellario MCP server
 - Agent prompt structure for multi-device orchestration → reused in OpenLabAI
-- Error handling pattern for instrument pauses → documented in INSTRUMENT_GUIDE.md
+- Error handling pattern for instrument pauses → documented in ../docs/INSTRUMENT_GUIDE.md
 
 ---
 
@@ -77,11 +78,13 @@ Scientist (natural language intent)
 
 ## What This Proves for OpenLabAI
 
-This demo is the production deployment evidence behind OpenLabAI's design decisions:
+This demo is where OpenLabAI's design decisions came from. It was a conference
+demonstration, not a production laboratory deployment:
 
-1. **MCP as orchestration layer** — validated at SLAS with real instruments
+1. **MCP as orchestration layer** — exercised at SLAS 2026 with real instruments
 2. **Auditability requirements** — learned from watching pharma attendees ask "how do you log this?"
-3. **Multi-device coordination** — RACS + G1 proved the pattern works; Cellario MCP extends it
+3. **Multi-device coordination** — RACS + G1 showed the pattern works; the Cellario
+   MCP server is the attempt to generalise it, and has not yet run on a physical workcell
 4. **Scientist-centered interface** — Ginkgo scientists directed the demo in plain English
 
 The OpenLabAI framework is the open-source distillation of what we learned building and running this demo.

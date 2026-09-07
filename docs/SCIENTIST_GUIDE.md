@@ -1,7 +1,12 @@
-# 🔬 Scientist Guide
-### Using Lab-Assistant with zero coding experience
+# Scientist Guide
+### Using OpenLabAI with no coding experience
 
-This guide is for wet lab scientists who want to use Lab-Assistant to plan and run protocols — no programming knowledge required.
+This guide is for wet lab scientists who want to use OpenLabAI to plan protocols.
+No programming knowledge required.
+
+One thing to know up front: OpenLabAI plans and writes protocols, it does not run
+them. You review the generated file and start the run yourself in the Opentrons
+App or Biomek Software. Nothing moves without you.
 
 ---
 
@@ -15,7 +20,7 @@ This guide is for wet lab scientists who want to use Lab-Assistant to plan and r
 
 ## The Easiest Way: Just the GUI
 
-**Step 1:** Download `BiomekAgent.html` from the [gui folder](../gui/)
+**Step 1:** Download [`BiomekAgent.html`](../gui/BiomekAgent.html) from the `gui/` folder
 
 **Step 2:** Open it in Chrome or Edge (double-click the file)
 
@@ -135,7 +140,7 @@ If the MCP server isn't running, the agent will still work in **demo mode** — 
 
 ## Getting Help
 
-- **GitHub Issues:** [github.com/nygmeta/Lab-Assistant/issues](https://github.com/nygmeta/Lab-Assistant/issues)
+- **GitHub Issues:** [github.com/nygmeta/OpenLabAI/issues](https://github.com/nygmeta/OpenLabAI/issues)
 - **Email:** nygmetainur@gmail.com
 - **Common problems:** See the [Troubleshooting section](#troubleshooting) below
 

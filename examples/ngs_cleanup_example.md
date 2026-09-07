@@ -1,6 +1,6 @@
 # Example: NGS Library Cleanup with AMPure Beads
 
-This walkthrough shows a scientist with no coding experience using Lab-Assistant to plan and run an NGS library cleanup.
+This walkthrough shows a scientist with no coding experience using OpenLabAI to plan an NGS library cleanup. The agent generates the protocol file; the scientist reviews it and starts the run in the Opentrons App.
 
 ---
 
@@ -68,18 +68,28 @@ This walkthrough shows a scientist with no coding experience using Lab-Assistant
 ---
 
 **Scientist:**
-> Run it.
+> Looks right. Write it out.
 
 **Agent:**
-> Protocol started — 11 steps queued. Running Step 1: Pick up tips...
+> Saved to `protocols/NGS_AMPure_Cleanup.py` — 11 steps. Open it in the Opentrons
+> App to review the deck assignments, then start the run from there. I cannot
+> start it for you.
+
+The scientist opens the generated file, checks it against the deck, and starts
+the run in the Opentrons App.
 
 ---
 
 ## Key Points
 
-1. **The scientist never wrote code.** The entire interaction was plain English.
-2. **The agent knew the protocol.** It understood "AMPure bead cleanup" and "1.8x ratio" without needing step-by-step instructions.
-3. **Corrections were conversational.** Adding the extra mix step required one sentence, not editing a Python file.
-4. **Total time from description to running:** ~4 minutes.
+1. **The scientist never wrote code.** The whole interaction was plain English.
+2. **The agent knew the protocol pattern.** It handled "AMPure bead cleanup" and
+   "1.8x ratio" without step-by-step instructions.
+3. **Corrections were conversational.** Adding the mix step took one sentence
+   rather than an edit to a Python file.
+4. **The agent stopped at the file.** It does not upload or start protocols. A
+   person reviews the generated file and starts the run in the vendor software.
 
-Compare to manual method development: 30 minutes minimum for a simple protocol, 2-3 hours for a full 96-well optimized cleanup.
+This walkthrough is an illustration of the intended interaction, not a transcript
+of a timed benchmark. No timing comparison against manual method development has
+been measured.

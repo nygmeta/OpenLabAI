@@ -1,17 +1,26 @@
-# 🔌 Instrument Connection Guide
+# Instrument Connection Guide
 
-How to connect Lab-Assistant to each supported instrument type.
+How to connect OpenLabAI to each supported instrument. Status values match the
+table in the README: **Implemented** (run against a physical instrument),
+**Partial** (written, mock mode only), **Planned** (not built).
+
+All commands are run from the repository root.
 
 ---
 
-## Opentrons OT-2 (Tier 1 — Full Live Control)
+## Opentrons OT-2 — Implemented
 
-**What you get:** Real-time bidirectional control. The agent can read your actual deck, execute steps, and adapt mid-run.
+**What you get:** The agent reads your actual deck over the Opentrons HTTP API,
+reports run status, homes the robot, and generates a PyLabRobot protocol file.
+
+**What you do not get:** protocol upload or execution. The server writes a file to
+`protocols/`; you review it and run it through the Opentrons App. `home_robot()`
+is the only tool that moves the robot.
 
 **Requirements:**
 - OT-2 connected to your computer via USB or on the same WiFi network
 - Python 3.13+
-- `pip install mcp pylabrobot`
+- `pip install -r requirements.txt`
 
 **Setup:**
 ```bash
@@ -27,33 +36,32 @@ If it returns your actual labware, you're connected. 🎉
 
 ---
 
-## Hamilton STAR / STARLet (Tier 2 — Full Programmatic Control)
+## Hamilton STAR / STARlet — Planned
 
-**What you get:** Full control via PyLabRobot's USB firmware interface.
+**Not built.** There is no `hamilton_server.py` in this repository. This section
+describes the intended approach, not working software.
 
-**Requirements:**
-- Hamilton STAR or STARLet with USB connection
-- Windows PC (USB driver required)
-- `pip install mcp pylabrobot pywin32`
-- libusbK driver installed (see [PyLabRobot docs](https://docs.pylabrobot.org))
-
-**Setup:**
-```bash
-python mcp_servers/hamilton_server.py
-```
-
-**Note:** First-time setup requires installing the libusbK USB driver, which replaces Hamilton's default driver. Follow the [PyLabRobot Hamilton setup guide](https://docs.pylabrobot.org/hamilton.html) carefully. This is a one-time setup.
+The plan is to wrap PyLabRobot's USB firmware interface, which would require a
+Windows PC and the libusbK driver in place of Hamilton's default driver (see the
+[PyLabRobot documentation](https://docs.pylabrobot.org)). This is the most useful
+open contribution to the project.
 
 ---
 
-## Cellario Workcells (Tier 2 — COM Automation)
+## Cellario Workcells — Partial (mock mode only)
 
-**What you get:** Orchestration of full integrated workcell runs — schedule batches, query device status, monitor queues.
+**Status:** the four tools below are implemented against the documented
+`CellarioAutomation.Application` COM interface, but this connector has only been
+exercised in mock mode. It has not been run against a physical workcell. Treat
+the instructions below as untested.
+
+**What it is intended to do:** orchestrate integrated workcell runs — schedule
+batches, query device status, monitor queues.
 
 **Requirements:**
 - Windows PC running Cellario software
 - Cellario version 6.x or higher (COM interface required)
-- `pip install mcp pywin32`
+- `pip install -r requirements.txt`
 
 **Setup:**
 ```bash
@@ -69,13 +77,13 @@ python mcp_servers/cellario_server.py
 
 ---
 
-## Beckman Coulter Biomek FXP (Tier 3 — File-Based)
+## Beckman Coulter Biomek FXP — Implemented (file-based)
 
 **What you get:** The agent generates ready-to-open `.mth` method files. You open them in Biomek Software and run manually.
 
 **Requirements:**
 - Python 3.13+
-- `pip install mcp pywin32`
+- `pip install -r requirements.txt`
 - Biomek Software installed (for opening and validating generated files)
 
 **Setup:**
@@ -96,11 +104,14 @@ python mcp_servers/biomek_server.py
 
 ## Running Without a Robot (Demo Mode)
 
-All MCP servers run in **mock mode** if the robot hardware is not connected. The agent will:
-- Return simulated deck layouts based on your configuration
-- Generate valid protocol files
-- Show the full Gantt timeline
+All MCP servers run in **mock mode** if the instrument is not reachable, and label
+the response `"mode": "mock"`. In mock mode the agent will:
+- Return a canned deck layout
+- Generate protocol files (this part is real — the files are the same either way)
 - Simulate protocol execution in the GUI
+
+Mock output is for development and training. It is not evidence that a connector
+works against hardware.
 
 This is useful for:
 - Learning the system before connecting hardware
@@ -116,7 +127,7 @@ This is useful for:
 → Make sure the Opentrons App is not currently controlling the robot.
 
 **"ModuleNotFoundError: No module named 'mcp'"**
-→ Run `pip install mcp pywin32` in your terminal.
+→ Run `pip install -r requirements.txt` from the repository root.
 
 **"COM object not found" (Cellario/Biomek)**
 → Make sure the instrument software is open before starting the MCP server.
@@ -124,3 +135,21 @@ This is useful for:
 
 **"No such file or directory" (Biomek .mth files)**
 → The server creates `C:\Biomek\Methods\` automatically. If it fails, create the folder manually.
+
+---
+
+## "The server just hangs when I run it"
+
+That is expected. MCP servers speak JSON-RPC over stdin and stdout, so a server
+started directly from a terminal sits waiting for a client. Point Claude Desktop
+at it via `claude_desktop_config.json` (see the README Quick Start) rather than
+running it by hand.
+
+## "AttributeError: 'Server' object has no attribute 'list_tools'"
+
+You have `mcp` 2.x installed. These servers use the low-level `Server` decorator
+API from `mcp` 1.x. Install the pinned version:
+
+```bash
+pip install -r requirements.txt
+```
