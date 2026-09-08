@@ -40,6 +40,20 @@ and it never moves a robot without a person explicitly approving that run.
 - The Slack control surface (`integrations/slack_bot.py`): a scientist requests a
   protocol in Slack, the agent plans and validates it, and a named person presses
   Approve before anything moves. Tested offline; not yet run in a live workspace.
+- The benchtop device layer (`mcp_servers/device_server.py`): nine simulated
+  instruments across eight classes — two plate readers, a heat sealer, a seal
+  peeler, a plate centrifuge, a shaking incubator, a thermal cycler, a barcode
+  reader and a plate hotel. Devices describe themselves through a manifest of
+  states and procedures and are reached through three primitives, so adding an
+  instrument is a driver file rather than new agent instructions. Simulated only;
+  no driver contacts hardware.
+- Workcell orchestration (`integrations/workcell.py`): sequences a whole
+  experiment across instruments, the LIMS, a human, and a teleoperated humanoid.
+  Plans the entire run — including which steps will stop for approval — before
+  anything moves.
+- The teleoperation bridge (`integrations/teleop_bridge.py`): lets a workflow
+  hand an unstructured step to a person driving the Unitree G1, rather than
+  ending. The agent can request a session; it never drives the robot.
 - The eval framework (`evals/`): deck constraint checking, acceptance criteria
   per protocol type, scoring, run logging with a protocol hash, and a test suite
   (`python evals/test_criteria.py`, 32 checks), plus the Slack approval-flow
@@ -58,6 +72,11 @@ and it never moves a robot without a person explicitly approving that run.
 **Planned, not built**
 
 - Tecan Freedom EVO connector.
+- Conformance with Anthropic's Model Hardware Standard. The specification is not
+  published — access is by application to a research preview — so no conformance
+  is claimed. The device layer is built on MHS's publicly described model so that
+  adopting the schema, when published, is a mapping exercise rather than a
+  rewrite. See `docs/MHS_INTEROP.md`.
 - The `resources/` labware library. `protocols/` is created at runtime as the
   output directory for `create_protocol()`.
 
@@ -72,7 +91,8 @@ schemas — `read_deck`, `get_run_status`, `create_protocol`, and so on. The age
 cannot issue arbitrary commands, open a socket to the instrument, or reach the
 COM object directly. Anything not on the tool list is not reachable. The full
 inventory is 9 tools for the OT-2, 4 for Hamilton, 3 for the Biomek FXP, 4 for
-Cellario, and 5 for the LIMS connector.
+Cellario, 5 for the LIMS connector, and 5 for the benchtop device server, which
+covers nine instruments through one manifest-driven surface.
 
 **2. Protocols are validated before execution.**
 `evals/protocol_evals.py` checks a generated protocol against per-instrument
@@ -169,6 +189,14 @@ python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
 python mcp_servers/cellario_server.py                   # Cellario (Windows)
 python mcp_servers/lims_server.py --lims labware \
        --base-url https://lims.example.org               # LIMS (see docs/LIMS_AND_SLACK.md)
+python mcp_servers/device_server.py                     # Benchtop devices, all simulated
+```
+
+To sequence a whole experiment across instruments, a human, and the humanoid:
+
+```bash
+python integrations/workcell.py --demo                  # plan only, nothing moves
+python integrations/workcell.py --demo --approve        # run it through
 ```
 
 To drive protocols from Slack instead of a terminal:
@@ -255,6 +283,8 @@ OpenLabAI/
 ├── docs/
 │   ├── INSTRUMENT_GUIDE.md       # How to connect each instrument
 │   ├── LIMS_AND_SLACK.md         # LIMS profiles and the Slack approval flow
+│   ├── HUMANOID_TELEOP.md        # The Unitree G1, and why the agent cannot drive it
+│   ├── MHS_INTEROP.md            # Model Hardware Standard alignment, and its limits
 │   └── SCIENTIST_GUIDE.md        # For scientists with no coding background
 ├── requirements.txt
 ├── LICENSE
@@ -272,6 +302,10 @@ as the output directory for generated protocol files.
 
 - **Deck constraint checker** — volume limits per tip type, valid slot and
   position names, and tip availability, per instrument.
+- **Device-enforced limits** — benchtop instruments refuse an out-of-range value
+  themselves, before anything happens, so an agent cannot talk past a temperature
+  ceiling or a rotor speed. Limits are checked *before* the confirmation gate, so
+  an unsafe request is refused as unsafe even when a human confirms it.
 - **Acceptance criteria** — per protocol type (NGS cleanup, normalization, serial
   dilution, simple transfer): required steps, bead ratio bounds, minimum wash
   cycles, elution volume range. Step labels are matched by token and synonym, so
@@ -283,7 +317,11 @@ Run the bundled example and the tests:
 ```bash
 python evals/protocol_evals.py
 python evals/run_logger.py
-python evals/test_criteria.py
+python evals/test_criteria.py                 # 32 checks
+python mcp_servers/devices/test_devices.py    # 25 checks
+python integrations/test_slack_flow.py        # 12 checks
+python integrations/test_workcell.py          # 18 checks
+python mcp_servers/mhs_bridge.py --verify     # architectural invariants
 ```
 
 Criteria matching is token-based with synonyms, not literal substring matching,
