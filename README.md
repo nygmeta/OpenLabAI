@@ -51,9 +51,14 @@ and it never moves a robot without a person explicitly approving that run.
   experiment across instruments, the LIMS, a human, and a teleoperated humanoid.
   Plans the entire run — including which steps will stop for approval — before
   anything moves.
-- The teleoperation bridge (`integrations/teleop_bridge.py`): lets a workflow
-  hand an unstructured step to a person driving the Unitree G1, rather than
-  ending. The agent can request a session; it never drives the robot.
+- The teleoperation layer (`teleop/`, `mcp_servers/teleop_server.py`,
+  `integrations/teleop_bridge.py`): validated rig configuration, a ten-item
+  pre-session safety checklist, and a session state machine that refuses to bring
+  the robot to standing until its support frame is confirmed and refuses to hand
+  over control without a named operator and verified hand tracking. The agent can
+  observe a session, request work, and stop the robot; it can never drive it.
+  The control loop is Unitree's xr_teleoperate and the operator console is a
+  separate application; neither is vendored here.
 - The eval framework (`evals/`): deck constraint checking, acceptance criteria
   per protocol type, scoring, run logging with a protocol hash, and a test suite
   (`python evals/test_criteria.py`, 32 checks), plus the Slack approval-flow
@@ -190,6 +195,7 @@ python mcp_servers/cellario_server.py                   # Cellario (Windows)
 python mcp_servers/lims_server.py --lims labware \
        --base-url https://lims.example.org               # LIMS (see docs/LIMS_AND_SLACK.md)
 python mcp_servers/device_server.py                     # Benchtop devices, all simulated
+python mcp_servers/teleop_server.py --arm G1_29 --ee inspire1   # Humanoid session
 ```
 
 To sequence a whole experiment across instruments, a human, and the humanoid:
@@ -321,6 +327,7 @@ python evals/test_criteria.py                 # 32 checks
 python mcp_servers/devices/test_devices.py    # 25 checks
 python integrations/test_slack_flow.py        # 12 checks
 python integrations/test_workcell.py          # 18 checks
+python teleop/test_teleop.py                  # 23 checks
 python mcp_servers/mhs_bridge.py --verify     # architectural invariants
 ```
 
