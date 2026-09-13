@@ -135,7 +135,7 @@ GxP-adjacent environments where traceability is a requirement.
 In the labs I have worked in, one automation engineer supports somewhere between
 twenty and thirty scientists. Every new liquid handling method goes through that
 one person, and scientists wait days or weeks. This ratio is my own observation
-from six years at Guardant Health, Personalis, and Hexagon Bio; I am not aware of
+from several years at Guardant Health, Personalis, and Hexagon Bio; I am not aware of
 a published survey establishing it as an industry-wide figure.
 
 PyLabRobot ([Wierenga et al., 2023](https://doi.org/10.1101/2023.07.10.547733))
