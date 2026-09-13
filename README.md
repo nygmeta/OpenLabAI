@@ -412,8 +412,7 @@ Built by **Ainur Nygmet** at ZenoVistaAI Inc.
 
 Several years as a lab automation engineer at Guardant Health, Personalis, and
 Hexagon Bio: 50+ Hamilton methods developed, 40+ scientists trained on lab
-automation, certified Cellario operator. Demonstrated live AI-driven workcell
-orchestration at the SLAS 2026 International Conference and Exhibition in Boston,
+automation, certified Cellario operator. DDemonstrated live humanoid teleoperation for laboratory work at the SLAS 2026 International Conference and Exhibition in Boston, February 2026 International Conference and Exhibition in Boston,
 February 2026 — see [examples/slas_boston_case_study.md](examples/slas_boston_case_study.md).
 
 This project exists because I was the bottleneck.
