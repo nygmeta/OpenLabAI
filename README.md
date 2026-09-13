@@ -410,7 +410,7 @@ This work builds on:
 
 Built by **Ainur Nygmet** at ZenoVistaAI Inc.
 
-Six years as a lab automation engineer at Guardant Health, Personalis, and
+Several years as a lab automation engineer at Guardant Health, Personalis, and
 Hexagon Bio: 50+ Hamilton methods developed, 40+ scientists trained on lab
 automation, certified Cellario operator. Demonstrated live AI-driven workcell
 orchestration at the SLAS 2026 International Conference and Exhibition in Boston,
