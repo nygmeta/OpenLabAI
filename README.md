@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen.svg)](https://modelcontextprotocol.io)
+[![Tests](https://github.com/nygmeta/OpenLabAI/actions/workflows/tests.yml/badge.svg)](https://github.com/nygmeta/OpenLabAI/actions/workflows/tests.yml)
 
 OpenLabAI exposes liquid handling instruments to an LLM agent as a small set of
 structured tools, so a scientist can describe a protocol in plain English and get
@@ -384,7 +385,11 @@ would need its own benchmark, which has not been run.
 Contributions welcome, especially from wet lab scientists who can say what is
 missing.
 
-- **Found a bug?** Open a GitHub issue.
+- **Found a bug?** Open a GitHub issue. For anything that could let a robot move
+  without approval, see [SECURITY.md](SECURITY.md) instead.
+- **Have an OT-2?** Run `scripts/verify_ot2_hardware.py` and share the log; see
+  [docs/HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md). The tests and
+  how to run them are in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **New instrument backend?** Open a PR adding a server under `mcp_servers/`.
   Tecan is the remaining gap; the Hamilton connector needs someone with physical
   hardware to verify it.
