@@ -78,7 +78,9 @@ and it never moves a robot without a person explicitly approving that run.
   been exercised in mock mode. It has not been run against a physical workcell.
 - The Hamilton connector is simulation-verified only, as above. A live connection
   additionally needs Windows, USB, and the libusbK driver, none of which has been
-  exercised.
+  exercised. A USB relay that avoids replacing the Windows driver is included
+  (`mcp_servers/remote_usb.py`, `usb_relay.py`; see `docs/USB_RELAY.md`). It is tested
+  against a fake instrument and has not been run against a Hamilton.
 
 **Planned, not built**
 
@@ -286,6 +288,8 @@ OpenLabAI/
 │   ├── hamilton_server.py        # Hamilton STAR/STARlet (PyLabRobot, simulation)
 │   ├── plr_server.py             # PyLabRobot connector: simulate, then approve exact commands
 │   ├── plr_connector.py          # Its library: TraceBackend, plan checks, approval token
+│   ├── remote_usb.py             # PyLabRobot transport that reaches a USB instrument through a relay
+│   ├── usb_relay.py              # The relay: runs next to the robot, no driver swap on Mac/Linux
 │   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)
 │   └── cellario_server.py        # Cellario workcells (Windows COM)
 ├── evals/

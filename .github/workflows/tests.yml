@@ -33,6 +33,9 @@ jobs:
       - name: PyLabRobot connector (simulation)
         run: python mcp_servers/test_plr_connector.py
 
+      - name: USB relay and RemoteUSB transport (fake instrument)
+        run: python mcp_servers/test_remote_usb.py
+
       - name: Hardware verification script (fake robot)
         run: python scripts/test_verify_ot2_hardware.py
 

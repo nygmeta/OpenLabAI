@@ -18,6 +18,13 @@
   OT-2 path is untested on hardware and refuses to start without a committed hardware
   log or `--accept-unverified`. See `docs/PYLABROBOT_CONNECTOR.md`.
   Test: `mcp_servers/test_plr_connector.py` (59 checks).
+- `mcp_servers/remote_usb.py` and `usb_relay.py`: a PyLabRobot transport that reaches a
+  USB instrument through an authenticated TCP relay running on a Mac or Linux machine,
+  so the Windows PC that runs Venus does not need Hamilton's driver replaced with Zadig.
+  Authenticated (HMAC challenge), one controller at a time, local by default, audited.
+  Tested against a fake instrument, including PyLabRobot's real Hamilton `send_command`
+  (`mcp_servers/test_remote_usb.py`, 36 checks); never run against a Hamilton.
+  See `docs/USB_RELAY.md`.
 - `--port` option on the OT-2 server.
 - CONTRIBUTING.md, SECURITY.md, and issue templates.
 
