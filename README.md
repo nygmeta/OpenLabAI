@@ -72,7 +72,10 @@ and it never moves a robot without a person explicitly approving that run.
   `docs/PYLABROBOT_CONNECTOR.md`): OpenLabAI's own connector built on PyLabRobot.
   Plans are simulated with tip and volume tracking, and an approval token covers
   the exact commands that would be sent. Simulation only. The live path through
-  PyLabRobot's OT-2 backend has never been run against a physical robot.
+  PyLabRobot's OT-2 backend has never been run against a physical robot. It can also
+  plan workflows from Lab Agent, a separate voice front end by other authors
+  (`docs/VOICE_AND_LAB_AGENT.md`); that link is tested with workflow JSON only, not
+  with the voice pipeline.
 - The Cellario MCP server: the four tools are implemented against the
   `CellarioAutomation.Application` COM interface, but this connector has only
   been exercised in mock mode. It has not been run against a physical workcell.
@@ -288,6 +291,7 @@ OpenLabAI/
 │   ├── hamilton_server.py        # Hamilton STAR/STARlet (PyLabRobot, simulation)
 │   ├── plr_server.py             # PyLabRobot connector: simulate, then approve exact commands
 │   ├── plr_connector.py          # Its library: TraceBackend, plan checks, approval token
+│   ├── lab_agent_bridge.py       # Lab Agent workflow JSON -> plan, or a named refusal
 │   ├── remote_usb.py             # PyLabRobot transport that reaches a USB instrument through a relay
 │   ├── usb_relay.py              # The relay: runs next to the robot, no driver swap on Mac/Linux
 │   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)

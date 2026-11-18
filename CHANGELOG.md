@@ -25,7 +25,18 @@
   Tested against a fake instrument, including PyLabRobot's real Hamilton `send_command`
   (`mcp_servers/test_remote_usb.py`, 36 checks); never run against a Hamilton.
   See `docs/USB_RELAY.md`.
+- `mcp_servers/lab_agent_bridge.py` and a `plan_workflow` tool on `plr_server.py`: plan a workflow from
+  Lab Agent (https://github.com/nygmeta/Claude_Life_sciences, a separate voice front end mostly by Junchen Lu)
+  as plain JSON. Plate-to-plate transfers only; any other operation refuses the whole workflow with reasons.
+  An accepted plan gets the usual card, approval token and gate, plus a sentence to speak.
+  Tested on two real Lab Agent workflows (`mcp_servers/test_lab_agent_bridge.py`, 57 checks) and by
+  `examples/lab_agent_to_openlabai.py` over MCP. Not tested with the voice pipeline or a robot.
+  See `docs/VOICE_AND_LAB_AGENT.md`.
 - `--port` option on the OT-2 server.
+
+### Fixed (continued)
+- `plan_protocol` now refuses a starting volume larger than the well can hold. PyLabRobot does not check
+  this itself, so a plan could start from an impossible deck.
 - CONTRIBUTING.md, SECURITY.md, and issue templates.
 
 ### Fixed

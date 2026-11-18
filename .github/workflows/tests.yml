@@ -33,6 +33,9 @@ jobs:
       - name: PyLabRobot connector (simulation)
         run: python mcp_servers/test_plr_connector.py
 
+      - name: Lab Agent bridge (workflow JSON, simulation)
+        run: python mcp_servers/test_lab_agent_bridge.py
+
       - name: USB relay and RemoteUSB transport (fake instrument)
         run: python mcp_servers/test_remote_usb.py
 

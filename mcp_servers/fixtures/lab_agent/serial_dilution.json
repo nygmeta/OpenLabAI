@@ -1,0 +1,239 @@
+{
+ "workflow_id": "wf_f2fada41",
+ "source_sop": "SOP-DIL-01",
+ "labware": [
+  {
+   "id": "compound_source",
+   "type": "corning_96_wellplate_360ul",
+   "role": "samples",
+   "slot": "5"
+  },
+  {
+   "id": "dilution_plate",
+   "type": "corning_96_wellplate_360ul",
+   "role": "assay",
+   "slot": "6"
+  }
+ ],
+ "reagents": [
+  {
+   "id": "RG-DMSO",
+   "name": "DMSO (dilution backfill)",
+   "location": {
+    "labware": "compound_source",
+    "well": "A2"
+   },
+   "required_volume": {
+    "value": 3062.5,
+    "unit": "nL"
+   }
+  }
+ ],
+ "operations": [
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A1"
+   },
+   "volume": {
+    "value": 1000.0,
+    "unit": "nL"
+   },
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "compound_X dilution point 1 (1:1)"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A2"
+   },
+   "volume": {
+    "value": 500.0,
+    "unit": "nL"
+   },
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "compound_X dilution point 2 (1:2)"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A2"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A2"
+   },
+   "volume": {
+    "value": 500.0,
+    "unit": "nL"
+   },
+   "reagent_id": "RG-DMSO",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "diluent backfill"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A3"
+   },
+   "volume": {
+    "value": 250.0,
+    "unit": "nL"
+   },
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "compound_X dilution point 3 (1:4)"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A2"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A3"
+   },
+   "volume": {
+    "value": 750.0,
+    "unit": "nL"
+   },
+   "reagent_id": "RG-DMSO",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "diluent backfill"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A4"
+   },
+   "volume": {
+    "value": 125.0,
+    "unit": "nL"
+   },
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "compound_X dilution point 4 (1:8)"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A2"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A4"
+   },
+   "volume": {
+    "value": 875.0,
+    "unit": "nL"
+   },
+   "reagent_id": "RG-DMSO",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "diluent backfill"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A5"
+   },
+   "volume": {
+    "value": 62.5,
+    "unit": "nL"
+   },
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "compound_X dilution point 5 (1:16)"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "compound_source",
+    "well": "A2"
+   },
+   "dest": {
+    "labware": "dilution_plate",
+    "well": "A5"
+   },
+   "volume": {
+    "value": 937.5,
+    "unit": "nL"
+   },
+   "reagent_id": "RG-DMSO",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "diluent backfill"
+  }
+ ],
+ "metadata": {
+  "intent": "serial_dilution",
+  "compound": "compound_X",
+  "num_points": 5,
+  "dilution_factor": 2.0,
+  "final_volume_nL": 1000.0
+ }
+}

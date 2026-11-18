@@ -160,6 +160,9 @@ def build_deck(spec: dict, backend):
         resource = factory(name=item["name"])
         deck.assign_child_at_slot(resource, item["slot"])
         for well, volume in (item.get("volumes_ul") or {}).items():
+            capacity = resource[well][0].max_volume
+            if volume > capacity + 1e-6:             # PyLabRobot does not check this itself
+                raise PlanError(f"{item['name']}:{well} is given {volume:g} uL at the start, but the well holds at most {capacity:g} uL")
             resource[well][0].tracker.set_volume(volume)
         labware[item["name"]] = resource
         labware.kinds[item["name"]] = kind

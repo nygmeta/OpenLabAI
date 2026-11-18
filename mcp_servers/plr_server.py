@@ -16,6 +16,8 @@ Tools:
                             PyLabRobot with tip and volume tracking. Returns a plan
                             card: errors, carry-over warnings, final volumes, and an
                             approval token that covers the exact commands. Moves nothing.
+    plan_workflow()       - Plan a Lab Agent workflow (the voice front end): transfers only, anything
+                            else is refused with reasons. Same card, token and gate as plan_protocol.
     get_plan()            - Read a plan card again, optionally with the command trace.
     execute_plan()        - Run an approved plan. Requires confirm=true (a person's
                             approval) AND the approval token from the plan card. The plan
@@ -42,6 +44,7 @@ from mcp import types
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import plr_connector as plr                       # noqa: E402
+import lab_agent_bridge as bridge                 # noqa: E402
 
 try:
     from evals.run_logger import RunLogger        # noqa: E402
@@ -138,6 +141,19 @@ async def list_tools() -> list[types.Tool]:
             },
         ),
         types.Tool(
+            name="plan_workflow",
+            description=(
+                "Plan a Lab Agent workflow (https://github.com/nygmeta/Claude_Life_sciences) as JSON: labware plus "
+                "operations. Only plate-to-plate transfers within the p300 range are accepted; any other operation "
+                "(incubate, wash, wait, move, manual step, mix) refuses the whole workflow, with reasons, and creates "
+                "no plan. A plan that is accepted gets the same card, approval token and gate as plan_protocol, plus "
+                "a short `readback` for text-to-speech and the starting volumes it assumed. Moves nothing."),
+            inputSchema={"type": "object", "properties": {
+                "workflow": {"type": "object", "description": "The Workflow object Lab Agent returns."},
+                "loaded_volumes_ul": {"type": "object", "description": "Optional {'plate:A1': 120} to replace assumed starting volumes."}},
+                "required": ["workflow"]},
+        ),
+        types.Tool(
             name="get_plan",
             description="Read a plan card again by plan_id, optionally with the full command trace.",
             inputSchema={"type": "object", "properties": {"plan_id": {"type": "string"},
@@ -167,6 +183,8 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             return await handle_describe()
         if name == "plan_protocol":
             return await handle_plan(arguments)
+        if name == "plan_workflow":
+            return await handle_plan_workflow(arguments)
         if name == "get_plan":
             return await handle_get_plan(arguments)
         if name == "execute_plan":
@@ -191,9 +209,8 @@ async def handle_describe():
     })
 
 
-async def handle_plan(arguments: dict):
-    spec, steps = arguments["deck"], arguments["steps"]
-    report = await plr.simulate(spec, steps)
+def _register_plan(spec: dict, steps: list, report: dict) -> dict:
+    """Store a simulated plan and return its card. Shared by plan_protocol and plan_workflow."""
     plan_id = "plan-" + uuid.uuid4().hex[:8]
     _, evidence = backend_allowed()
     card = {k: v for k, v in report.items() if k != "trace"}
@@ -203,6 +220,33 @@ async def handle_plan(arguments: dict):
                                 "Have a person review this card, then call execute_plan with the plan_id, "
                                 "this approval_token and confirm=true.")})
     PLANS[plan_id] = {"spec": spec, "steps": steps, "card": card, "trace": report["trace"]}
+    return card
+
+
+async def handle_plan(arguments: dict):
+    spec, steps = arguments["deck"], arguments["steps"]
+    return _text(_register_plan(spec, steps, await plr.simulate(spec, steps)))
+
+
+async def handle_plan_workflow(arguments: dict):
+    """Plan a Lab Agent workflow. A workflow the connector cannot do is refused, with reasons, and no plan exists."""
+    conversion = bridge.convert(arguments.get("workflow"), arguments.get("loaded_volumes_ul"))
+    if not conversion["ok"]:
+        return _text({"valid": False, "refused": True, "refusals": conversion["refusals"],
+                      "transfers_before_first_unsupported": conversion["transfers_before_first_unsupported"],
+                      "readback": bridge.readback_refused(conversion), "state": "nothing planned, nothing moved"})
+    try:
+        report = await plr.simulate(conversion["deck"], conversion["steps"])
+    except Exception as exc:                       # e.g. a starting volume larger than the well holds
+        conversion["refusals"] = [{"where": "deck", "reason": f"the deck could not be set up: {type(exc).__name__}: {str(exc)[:200]}"}]
+        conversion["transfers_before_first_unsupported"] = 0
+        return _text({"valid": False, "refused": True, "refusals": conversion["refusals"],
+                      "readback": bridge.readback_refused(conversion), "state": "nothing planned, nothing moved"})
+    card = _register_plan(conversion["deck"], conversion["steps"], report)
+    card.update({"source": "lab_agent_workflow", "workflow_id": conversion.get("workflow_id"),
+                 "assumptions": conversion["assumptions"], "notes": conversion["notes"],
+                 "readback": bridge.readback(card, conversion)})
+    PLANS[card["plan_id"]]["card"] = card
     return _text(card)
 
 

@@ -1,0 +1,1464 @@
+{
+ "workflow_id": "wf_96094813",
+ "source_sop": "SOP-ELISA-04",
+ "labware": [
+  {
+   "id": "assay_plate",
+   "type": "corning_96_wellplate_360ul",
+   "role": "assay",
+   "slot": "1"
+  },
+  {
+   "id": "sample_plate",
+   "type": "corning_96_wellplate_360ul",
+   "role": "samples",
+   "slot": "3"
+  },
+  {
+   "id": "reagent_reservoir",
+   "type": "nest_12_reservoir_15ml",
+   "role": "reagent",
+   "slot": "2"
+  },
+  {
+   "id": "tips_300",
+   "type": "opentrons_96_tiprack_300ul",
+   "role": "tips",
+   "slot": "4"
+  }
+ ],
+ "reagents": [
+  {
+   "id": "RG-COAT",
+   "name": "Coating buffer (carbonate-bicarbonate)",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 5800.0,
+    "unit": "uL"
+   }
+  },
+  {
+   "id": "RG-WASH",
+   "name": "Wash buffer (PBST)",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 208800.0,
+    "unit": "uL"
+   }
+  },
+  {
+   "id": "RG-BLOCK",
+   "name": "Blocking buffer (1% BSA in PBS)",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 11600.0,
+    "unit": "uL"
+   }
+  },
+  {
+   "id": "RG-IL6-DET",
+   "name": "Anti-IL-6 detection antibody (HRP working soln)",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 5800.0,
+    "unit": "uL"
+   }
+  },
+  {
+   "id": "RG-TMB",
+   "name": "TMB substrate",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 5800.0,
+    "unit": "uL"
+   }
+  },
+  {
+   "id": "RG-STOP",
+   "name": "Stop solution (2N H2SO4)",
+   "location": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "required_volume": {
+    "value": 2900.0,
+    "unit": "uL"
+   }
+  }
+ ],
+ "operations": [
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H1"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H2"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H3"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H4"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H5"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H6"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "C7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "D7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "E7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "F7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "G7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "H7"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A8"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B8"
+   },
+   "volume": {
+    "value": 100.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-COAT",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Coat wells with capture antibody in coating buffer"
+  },
+  {
+   "op": "incubate",
+   "source": null,
+   "dest": null,
+   "volume": null,
+   "reagent_id": null,
+   "mix_after": null,
+   "new_tip": true,
+   "duration_s": 3600,
+   "temperature_c": 4.0,
+   "labware_id": null,
+   "note": "Overnight coat abbreviated for demo"
+  },
+  {
+   "op": "wash",
+   "source": null,
+   "dest": {
+    "labware": "assay_plate",
+    "well": "ALL"
+   },
+   "volume": null,
+   "reagent_id": "RG-WASH",
+   "mix_after": null,
+   "new_tip": true,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "3x wash cycle"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "A1"
+   },
+   "volume": {
+    "value": 200.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-BLOCK",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Block non-specific binding"
+  },
+  {
+   "op": "transfer",
+   "source": {
+    "labware": "reagent_reservoir",
+    "well": "A1"
+   },
+   "dest": {
+    "labware": "assay_plate",
+    "well": "B1"
+   },
+   "volume": {
+    "value": 200.0,
+    "unit": "uL"
+   },
+   "reagent_id": "RG-BLOCK",
+   "mix_after": null,
+   "new_tip": false,
+   "duration_s": null,
+   "temperature_c": null,
+   "labware_id": null,
+   "note": "Block non-specific binding"
+  }
+ ],
+ "metadata": {
+  "intent": "elisa",
+  "analyte": "IL-6",
+  "num_samples": 24,
+  "replicates": 2,
+  "total_wells": 58,
+  "sample_volume_uL": 100.0,
+  "fixture_note": "first 62 of 348 operations; 58 transfers, then an incubation"
+ }
+}

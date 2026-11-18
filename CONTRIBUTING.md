@@ -19,6 +19,7 @@ python mcp_servers/devices/test_devices.py
 python mcp_servers/test_ot2_server.py
 python mcp_servers/test_plr_connector.py
 python mcp_servers/test_remote_usb.py
+python mcp_servers/test_lab_agent_bridge.py
 python scripts/test_verify_ot2_hardware.py
 python integrations/test_slack_flow.py
 python integrations/test_workcell.py
