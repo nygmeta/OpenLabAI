@@ -68,6 +68,11 @@ and it never moves a robot without a person explicitly approving that run.
 
 **Partial**
 
+- The PyLabRobot connector (`mcp_servers/plr_server.py`, see
+  `docs/PYLABROBOT_CONNECTOR.md`): OpenLabAI's own connector built on PyLabRobot.
+  Plans are simulated with tip and volume tracking, and an approval token covers
+  the exact commands that would be sent. Simulation only. The live path through
+  PyLabRobot's OT-2 backend has never been run against a physical robot.
 - The Cellario MCP server: the four tools are implemented against the
   `CellarioAutomation.Application` COM interface, but this connector has only
   been exercised in mock mode. It has not been run against a physical workcell.
@@ -191,6 +196,7 @@ Run the server for your instrument, from the repository root:
 ```bash
 python mcp_servers/ot2_server.py --host 169.254.10.10   # Opentrons OT-2
 python mcp_servers/hamilton_server.py --deck starlet    # Hamilton STAR/STARlet
+python mcp_servers/plr_server.py                        # PyLabRobot connector, simulation by default
 python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
 python mcp_servers/cellario_server.py                   # Cellario (Windows)
 python mcp_servers/lims_server.py --lims labware \
@@ -278,6 +284,8 @@ OpenLabAI/
 ├── mcp_servers/
 │   ├── ot2_server.py             # Opentrons OT-2 (HTTP API, can execute)
 │   ├── hamilton_server.py        # Hamilton STAR/STARlet (PyLabRobot, simulation)
+│   ├── plr_server.py             # PyLabRobot connector: simulate, then approve exact commands
+│   ├── plr_connector.py          # Its library: TraceBackend, plan checks, approval token
 │   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)
 │   └── cellario_server.py        # Cellario workcells (Windows COM)
 ├── evals/

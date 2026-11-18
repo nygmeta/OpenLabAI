@@ -17,6 +17,7 @@ Every suite is a script that exits non-zero on failure. CI runs all of them:
 python evals/test_criteria.py
 python mcp_servers/devices/test_devices.py
 python mcp_servers/test_ot2_server.py
+python mcp_servers/test_plr_connector.py
 python scripts/test_verify_ot2_hardware.py
 python integrations/test_slack_flow.py
 python integrations/test_workcell.py

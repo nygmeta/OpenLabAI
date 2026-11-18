@@ -11,6 +11,13 @@
 - `scripts/verify_ot2_hardware.py` and `docs/HARDWARE_VERIFICATION.md`: run
   OpenLabAI's own OT-2 server against a physical robot and record a log in
   `hardware_logs/`. Test: `scripts/test_verify_ot2_hardware.py` (25 checks).
+- `mcp_servers/plr_server.py` and `plr_connector.py`: OpenLabAI's own connector built on
+  PyLabRobot, with a recording backend of our own (`TraceBackend`), plans simulated
+  under PyLabRobot's tip and volume tracking, carry-over warnings, and an approval
+  token that covers the exact commands a plan generates. Simulation only; the live
+  OT-2 path is untested on hardware and refuses to start without a committed hardware
+  log or `--accept-unverified`. See `docs/PYLABROBOT_CONNECTOR.md`.
+  Test: `mcp_servers/test_plr_connector.py` (59 checks).
 - `--port` option on the OT-2 server.
 - CONTRIBUTING.md, SECURITY.md, and issue templates.
 
