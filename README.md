@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen.svg)](https://modelcontextprotocol.io)
+[![Tests](https://github.com/nygmeta/OpenLabAI/actions/workflows/tests.yml/badge.svg)](https://github.com/nygmeta/OpenLabAI/actions/workflows/tests.yml)
 
 OpenLabAI exposes liquid handling instruments to an LLM agent as a small set of
 structured tools, so a scientist can describe a protocol in plain English and get
@@ -67,12 +68,19 @@ and it never moves a robot without a person explicitly approving that run.
 
 **Partial**
 
+- The PyLabRobot connector (`mcp_servers/plr_server.py`, see
+  `docs/PYLABROBOT_CONNECTOR.md`): OpenLabAI's own connector built on PyLabRobot.
+  Plans are simulated with tip and volume tracking, and an approval token covers
+  the exact commands that would be sent. Simulation only. The live path through
+  PyLabRobot's OT-2 backend has never been run against a physical robot.
 - The Cellario MCP server: the four tools are implemented against the
   `CellarioAutomation.Application` COM interface, but this connector has only
   been exercised in mock mode. It has not been run against a physical workcell.
 - The Hamilton connector is simulation-verified only, as above. A live connection
   additionally needs Windows, USB, and the libusbK driver, none of which has been
-  exercised.
+  exercised. A USB relay that avoids replacing the Windows driver is included
+  (`mcp_servers/remote_usb.py`, `usb_relay.py`; see `docs/USB_RELAY.md`). It is tested
+  against a fake instrument and has not been run against a Hamilton.
 
 **Planned, not built**
 
@@ -190,6 +198,7 @@ Run the server for your instrument, from the repository root:
 ```bash
 python mcp_servers/ot2_server.py --host 169.254.10.10   # Opentrons OT-2
 python mcp_servers/hamilton_server.py --deck starlet    # Hamilton STAR/STARlet
+python mcp_servers/plr_server.py                        # PyLabRobot connector, simulation by default
 python mcp_servers/biomek_server.py                     # Beckman Biomek FXP
 python mcp_servers/cellario_server.py                   # Cellario (Windows)
 python mcp_servers/lims_server.py --lims labware \
@@ -277,6 +286,10 @@ OpenLabAI/
 ├── mcp_servers/
 │   ├── ot2_server.py             # Opentrons OT-2 (HTTP API, can execute)
 │   ├── hamilton_server.py        # Hamilton STAR/STARlet (PyLabRobot, simulation)
+│   ├── plr_server.py             # PyLabRobot connector: simulate, then approve exact commands
+│   ├── plr_connector.py          # Its library: TraceBackend, plan checks, approval token
+│   ├── remote_usb.py             # PyLabRobot transport that reaches a USB instrument through a relay
+│   ├── usb_relay.py              # The relay: runs next to the robot, no driver swap on Mac/Linux
 │   ├── biomek_server.py          # Beckman Biomek FXP (Windows COM, file-based)
 │   └── cellario_server.py        # Cellario workcells (Windows COM)
 ├── evals/
@@ -384,7 +397,11 @@ would need its own benchmark, which has not been run.
 Contributions welcome, especially from wet lab scientists who can say what is
 missing.
 
-- **Found a bug?** Open a GitHub issue.
+- **Found a bug?** Open a GitHub issue. For anything that could let a robot move
+  without approval, see [SECURITY.md](SECURITY.md) instead.
+- **Have an OT-2?** Run `scripts/verify_ot2_hardware.py` and share the log; see
+  [docs/HARDWARE_VERIFICATION.md](docs/HARDWARE_VERIFICATION.md). The tests and
+  how to run them are in [CONTRIBUTING.md](CONTRIBUTING.md).
 - **New instrument backend?** Open a PR adding a server under `mcp_servers/`.
   Tecan is the remaining gap; the Hamilton connector needs someone with physical
   hardware to verify it.

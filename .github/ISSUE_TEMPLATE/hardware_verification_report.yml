@@ -1,0 +1,39 @@
+name: Hardware verification report
+description: Share a log from running scripts/verify_ot2_hardware.py on your own robot
+labels: ["hardware"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Failed runs are as useful as passing ones. See docs/HARDWARE_VERIFICATION.md.
+  - type: input
+    id: instrument
+    attributes:
+      label: Instrument and firmware
+      placeholder: "OT-2, API 7.x, firmware ..."
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: OpenLabAI commit you ran
+    validations:
+      required: true
+  - type: dropdown
+    id: tiers
+    attributes:
+      label: Tiers you ran
+      multiple: true
+      options: ["read-only", "upload", "motion"]
+  - type: textarea
+    id: log
+    attributes:
+      label: The log
+      description: Attach the JSON file from hardware_logs/ unedited, or paste a link to it.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What you saw at the robot
+      description: Lights, sounds, motion, anything unexpected.

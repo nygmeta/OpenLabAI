@@ -1,0 +1,27 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If this could let a robot move without approval, or bypass validation, use the private
+        reporting described in SECURITY.md instead of this form.
+  - type: input
+    id: component
+    attributes:
+      label: Which server or component
+      placeholder: "mcp_servers/ot2_server.py"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      description: Include whether this was mock mode, simulation, or a physical instrument.

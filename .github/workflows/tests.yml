@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Each suite is a script that exits non-zero on failure. None of them
+      # touches hardware; the OT-2 tests run against mcp_servers/fake_ot2.py.
+      - name: Eval framework
+        run: python evals/test_criteria.py
+
+      - name: Benchtop devices
+        run: python mcp_servers/devices/test_devices.py
+
+      - name: OT-2 server (fake robot)
+        run: python mcp_servers/test_ot2_server.py
+
+      - name: PyLabRobot connector (simulation)
+        run: python mcp_servers/test_plr_connector.py
+
+      - name: USB relay and RemoteUSB transport (fake instrument)
+        run: python mcp_servers/test_remote_usb.py
+
+      - name: Hardware verification script (fake robot)
+        run: python scripts/test_verify_ot2_hardware.py
+
+      - name: Slack approval flow
+        run: python integrations/test_slack_flow.py
+
+      - name: Workcell orchestration
+        run: python integrations/test_workcell.py
+
+      - name: Teleoperation layer
+        run: python teleop/test_teleop.py
