@@ -4,7 +4,7 @@ Reads OT-2 state over the Opentrons HTTP API, generates protocol files, and can
 execute them under an explicit human-approval gate.
 
 Usage:
-    python mcp_servers/ot2_server.py --host 169.254.x.x
+    python mcp_servers/ot2_server.py --host 169.254.x.x [--port 31950]
 
 Read-only tools:
     read_deck()        - Read current deck layout
@@ -19,9 +19,11 @@ Tools that prepare execution but move nothing:
 Tools that move hardware:
     home_robot()       - Home all axes
     start_run()        - Begin physical execution of an uploaded run. Refuses
-                         unless confirm=true is passed, refuses if the robot's
-                         analysis reported errors, and refuses if the protocol
-                         fails the eval framework's deck constraints.
+                         unless confirm=true is passed, refuses a run that was
+                         not uploaded through upload_protocol in this session,
+                         refuses if the robot's analysis reported errors, and
+                         refuses if the protocol fails the eval framework's deck
+                         constraints.
     pause_run()        - Pause a running protocol
     resume_run()       - Resume a paused protocol
     stop_run()         - Stop a run. Never gated; stopping is a safety action.
@@ -46,6 +48,8 @@ from mcp import types
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="169.254.10.10", help="OT-2 IP address")
+parser.add_argument("--port", type=int, default=31950,
+                    help="Opentrons HTTP API port (31950 unless you tunnel it)")
 parser.add_argument("--operator", default=os.environ.get("OPENLAB_OPERATOR", "unknown"),
                     help="Operator name recorded in the audit log")
 parser.add_argument("--api-level", default="2.13", help="Opentrons Python API level")
@@ -58,7 +62,7 @@ parser.add_argument("--tiprack", default="opentrons_96_tiprack_300ul",
 args, _ = parser.parse_known_args()
 
 OT2_HOST = args.host
-OT2_BASE = f"http://{OT2_HOST}:31950"
+OT2_BASE = f"http://{OT2_HOST}:{args.port}"
 HEADERS = {"opentrons-version": "3"}
 OPERATOR = args.operator
 API_LEVEL = args.api_level
@@ -602,7 +606,22 @@ async def handle_start_run(arguments: dict) -> list[types.TextContent]:
             "run_id": run_id,
         })
 
-    record = RUN_REGISTRY.get(run_id, {})
+    # The checks below depend on what upload_protocol recorded. A run this server
+    # never analysed (created elsewhere, or before a restart) would skip them, so
+    # it is refused: upload it again through upload_protocol first.
+    if run_id not in RUN_REGISTRY:
+        return _text({
+            "refused": True,
+            "reason": "this run was not uploaded through upload_protocol in this session",
+            "detail": (
+                "start_run only starts runs whose analysis and deck-constraint "
+                "checks this server has seen. Call upload_protocol again, review "
+                "the result, then start_run."
+            ),
+            "run_id": run_id,
+        })
+
+    record = RUN_REGISTRY[run_id]
     if record.get("analysis_errors"):
         return _text({"refused": True, "reason": "the robot's analysis reported errors",
                       "analysis_errors": record["analysis_errors"], "run_id": run_id})
@@ -611,37 +630,39 @@ async def handle_start_run(arguments: dict) -> list[types.TextContent]:
                       "constraint_violations": record["constraint_violations"], "run_id": run_id})
 
     result = await ot2_post(f"/runs/{run_id}/actions", {"data": {"actionType": "play"}})
-    _audit(run_id, "start", record)
+    audit_logged = _audit(run_id, "start", record)
     return _text({
         "run_id": run_id,
         "action": "play",
         "status": result.get("data", {}).get("actionType", "play"),
         "warning": "The robot is now executing. Use stop_run to halt it.",
-        "audit_logged": HAS_EVALS,
+        "audit_logged": audit_logged,
     })
 
 
 async def handle_run_action(arguments: dict, action: str) -> list[types.TextContent]:
     run_id = arguments["run_id"]
     result = await ot2_post(f"/runs/{run_id}/actions", {"data": {"actionType": action}})
-    _audit(run_id, action, RUN_REGISTRY.get(run_id, {}))
+    audit_logged = _audit(run_id, action, RUN_REGISTRY.get(run_id, {}))
     return _text({"run_id": run_id, "action": action,
-                  "result": result.get("data", {}), "audit_logged": HAS_EVALS})
+                  "result": result.get("data", {}), "audit_logged": audit_logged})
 
 
-def _audit(run_id: str, action: str, record: dict) -> None:
-    """Append an audit record. Never let logging failure break a robot action —
-    in particular, stop_run must always reach the robot."""
+def _audit(run_id: str, action: str, record: dict) -> bool:
+    """Append an audit record and say whether it was written. A logging failure
+    never breaks a robot action — in particular, stop_run must always reach the
+    robot — but it is reported, so a missing record is not mistaken for a logged one."""
     if not HAS_EVALS:
-        return
+        return False
     try:
         logger = RunLogger(operator=OPERATOR, instrument="OT-2",
                            protocol_name=record.get("path", ""))
         logger.log_agent_message("system", f"{action} run {run_id}")
         logger.log_run_complete(status=action)
         logger.save()
+        return True
     except Exception:
-        pass
+        return False
 
 
 def mock_deck() -> dict:
