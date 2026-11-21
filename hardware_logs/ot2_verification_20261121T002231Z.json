@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "script": "scripts/verify_ot2_hardware.py",
+  "script_version": 1,
+  "started_at": "2026-11-21T00:22:31Z",
+  "finished_at": "2026-11-21T00:22:45Z",
+  "operator": "Ainur Nygmet",
+  "notes": "Deck empty. Frontier Tower, San Francisco. Robot: Octet. Present: Byron. Commands entered by Claude Code on the operator's laptop at her direction.",
+  "host": "192.168.108.210",
+  "port": 31950,
+  "simulated": false,
+  "verdict": "failed",
+  "robot": {
+    "name": "Octet",
+    "robot_model": "OT-2 Standard",
+    "api_version": "26.6.0",
+    "fw_version": "v1.1.0-25e5cea",
+    "system_version": "2025.02.7-13-g5d02a9e8",
+    "robot_serial_sha256_12": "752df55feb78"
+  },
+  "robot_openapi": {
+    "available": true,
+    "path_count": 102,
+    "has_labware_path": false,
+    "has_runs_path": true,
+    "has_protocols_path": true,
+    "has_robot_home_path": true
+  },
+  "openlabai": {
+    "commit": "508399157dbf0cd38fff82ab8b71032f747ca26b",
+    "uncommitted_changes": false,
+    "mcp_version": "1.30.0",
+    "python": "3.13.3",
+    "platform": "macOS-14.6-arm64-arm-64bit-Mach-O"
+  },
+  "tiers_requested": [
+    "read_only",
+    "upload"
+  ],
+  "steps": [
+    {
+      "step": "list_tools",
+      "status": "pass",
+      "detail": "9 tools published"
+    },
+    {
+      "step": "read_deck",
+      "status": "fail",
+      "detail": "the server returned its mock deck, so nothing was read from the robot; this robot's own API lists no /labware path, so read_deck needs a different endpoint",
+      "response_excerpt": "{\n  \"connected\": false,\n  \"mode\": \"mock\",\n  \"labware\": [\n    {\n      \"slot\": \"1\",\n      \"name\": \"corning_96_wellplate_360ul_flat\",\n      \"display_name\": \"Sample plate\",\n      \"is_tiprack\": false\n    },\n    {\n      \"slot\": \"4\",\n      \"name\": \"corning_96_wellplate_360ul_flat\",\n      \"display_name\": \"D"
+    },
+    {
+      "step": "get_run_status",
+      "status": "pass",
+      "detail": "status: succeeded"
+    },
+    {
+      "step": "create_protocol",
+      "status": "pass",
+      "detail": "wrote a protocol file that parses",
+      "protocol_sha256": "f359717dc61cbd80ac428218d5319f9f5de5fa07753e8a1bc15ba47c5103984d"
+    },
+    {
+      "step": "upload_protocol",
+      "status": "pass",
+      "detail": "robot analysed the protocol (completed); run left idle",
+      "analysis_status": "completed",
+      "commands_analysed": 2
+    },
+    {
+      "step": "cleanup",
+      "status": "pass",
+      "detail": "deleted the idle run and the uploaded protocol"
+    },
+    {
+      "step": "home_robot",
+      "status": "skipped",
+      "detail": "not requested (--allow-motion)"
+    }
+  ],
+  "tools_passed": [
+    "create_protocol",
+    "get_run_status",
+    "upload_protocol"
+  ],
+  "tools_not_exercised": [
+    "home_robot",
+    "pause_run",
+    "read_deck",
+    "resume_run",
+    "start_run",
+    "stop_run"
+  ],
+  "never_exercised_by_this_script": [
+    "start_run",
+    "pause_run",
+    "resume_run",
+    "stop_run"
+  ],
+  "statement": "Tools were called through OpenLabAI's own MCP server (mcp_servers/ot2_server.py) over stdio against the robot identified above. This log records the tool responses. It does not show what the robot physically did; the operator's observations are in 'notes'."
+}
