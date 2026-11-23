@@ -207,7 +207,8 @@ async def run_steps(args, base: str, openapi: dict, steps: Steps, scratch: Path)
                 print("\n  The robot is about to HOME ALL AXES. Clear the deck and keep hands out of the robot.")
                 answer = input("  Type HOME to continue, anything else to skip: ").strip()
                 if answer == "HOME":
-                    text, homed = await call_tool(session, "home_robot", {})
+                    # The operator typed HOME above; that is the approval confirm stands for.
+                    text, homed = await call_tool(session, "home_robot", {"confirm": True})
                     if isinstance(homed, dict) and homed.get("status") == "homed":
                         steps.add("home_robot", "pass", "the server reported the robot homed")
                     else:
