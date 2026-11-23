@@ -142,9 +142,16 @@ class FakeOT2:
                 return 404, {"message": "no such protocol"}
             errors = [{"detail": "fake analysis error"}] if "FAKE_ANALYSIS_ERROR" in text else []
             commands = [{"commandType": "home", "params": {}}]
+            pipettes = [{"id": "pip-1", "pipetteName": "p20_single_gen2", "mount": "right"}]
             if "FAKE_BIG_VOLUME" in text:
                 commands.append({"commandType": "aspirate", "params": {"volume": 5000}})
-            return 200, {"data": [{"status": "completed", "errors": errors, "commands": commands}]}
+            if "FAKE_OVER_PIPETTE" in text:      # 50 uL through a 20 uL pipette
+                commands.append({"commandType": "aspirate",
+                                 "params": {"volume": 50, "pipetteId": "pip-1"}})
+            if "FAKE_NO_COMMANDS" in text:       # an analysis that checked nothing
+                commands = []
+            return 200, {"data": [{"status": "completed", "errors": errors,
+                                   "commands": commands, "pipettes": pipettes}]}
         m = re.fullmatch(r"/protocols/([^/]+)", path)
         if method == "DELETE" and m:
             self.protocols.pop(m.group(1), None)
@@ -164,6 +171,10 @@ class FakeOT2:
                 self.runs[m.group(1)]["status"] = status
             return 201, {"data": {"actionType": action}}
         m = re.fullmatch(r"/runs/([^/]+)", path)
+        if method == "GET" and m:
+            if m.group(1) not in self.runs:
+                return 404, {"message": "no such run"}
+            return 200, {"data": self.runs[m.group(1)]}
         if method == "DELETE" and m:
             self.runs.pop(m.group(1), None)
             return 200, {}

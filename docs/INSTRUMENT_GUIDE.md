@@ -22,11 +22,17 @@ gate:
    analysis errors and any deck constraint violations.
 3. You review the protocol.
 4. `start_run` begins execution, and only with `confirm=true`. It refuses if the
-   analysis reported errors or the constraint checks failed.
-5. `pause_run`, `resume_run` and `stop_run` control the run. `stop_run` is never
-   gated — stopping is always allowed.
+   analysis reported errors, did not complete, or produced no commands; if the
+   constraint checks failed or could not be run; or if another run is active.
+5. `pause_run` and `stop_run` control the run and are never gated: both make the
+   robot safer. `resume_run` and `home_robot` move the robot, so both need
+   `confirm=true`.
+6. `get_run_status` reports a run's state, the robot's errors, and the safe next
+   actions. After a failure it sends a person to the deck; it never suggests
+   resuming or retrying on its own.
 
-Every start, pause, resume and stop is written to the audit log.
+Every home, start, pause, resume and stop is written to the audit log with the
+SHA-256 of the protocol file.
 
 **Status:** the read, status, home and generate tools have been run against a
 physical OT-2. The execution tools have not — they are written against the

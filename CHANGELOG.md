@@ -5,7 +5,7 @@
 ### Added
 - GitHub Actions workflow that runs every test suite on each push and pull request.
 - `mcp_servers/fake_ot2.py`, a fake Opentrons HTTP API for tests, and
-  `mcp_servers/test_ot2_server.py` (35 checks), which covers the OT-2 execution
+  `mcp_servers/test_ot2_server.py` (72 checks), which covers the OT-2 execution
   path and the approval gate against it. Previously only the refusal paths were
   tested.
 - `scripts/verify_ot2_hardware.py` and `docs/HARDWARE_VERIFICATION.md`: run
@@ -28,7 +28,31 @@
 - `--port` option on the OT-2 server.
 - CONTRIBUTING.md, SECURITY.md, and issue templates.
 
+### Changed: OT-2 guardrails now fail closed
+- `home_robot` and `resume_run` require `confirm=true`, like `start_run`. Both move
+  the robot, and neither was gated. `home_robot` also refuses while a run is active
+  and is now written to the audit log. **This changes how the two tools are called.**
+- `start_run` refuses while another run is active on the robot.
+- `create_protocol` validates the request before it writes a file: protocol name,
+  well references, step labels, step types, volumes, mix cycles, and deck entries.
+  Before, a well reference or a step label was written into the generated Python
+  unchecked, so a crafted value could add code to the protocol. Volumes are checked
+  against the pipette's capacity.
+- `upload_protocol` reports the SHA-256 of the file it sent, and every audit record
+  for that run carries it. It only uploads `.py` files of at most 1 MiB.
+- `get_run_status` takes an optional `run_id`, reports the robot's errors for the
+  run, and lists the safe next actions for its state. A failed run is never offered
+  an automatic retry.
+
 ### Fixed
+- An analysis that timed out, was still pending, or produced no commands used to
+  count as a pass, because it reported no errors. `upload_protocol` now says
+  `can_start: false` and `start_run` refuses.
+- If the eval framework could not be imported, the deck constraint check was
+  silently skipped. `start_run` now refuses.
+- The deck constraint check compared every volume with the largest OT-2 tip
+  (1000 uL), so 50 uL through a 20 uL pipette passed. It now uses the capacity of
+  the pipette each command names.
 - `start_run` now refuses a run that was not uploaded through `upload_protocol` in
   the current session. Before, such a run skipped the analysis-error and deck-constraint
   checks, because those checks read what `upload_protocol` had recorded.
